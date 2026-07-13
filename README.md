@@ -1,11 +1,11 @@
 # RD Quant Platform
 
 **Version:** `0.5.0-alpha`  
-**Release:** Sprint 5 — Execution Platform
+**Release:** Sprint 6 — Execution Platform
 
 RD Quant Platform is a modular, event-driven quantitative research and paper-trading platform inspired by the DolphinDB pattern of stateful per-symbol computation followed by cross-sectional analytics.
 
-Sprint 5 is cumulative: it contains the architecture foundation, streaming dashboard, scanner engine, Strategy Lab, and execution platform developed in Sprints 1–5.
+Sprint 6 is cumulative: it contains the architecture foundation, streaming dashboard, scanner engine, Strategy Lab, and execution platform developed in Sprints 1–5.
 
 ## Capabilities
 
@@ -39,7 +39,7 @@ Sprint 5 is cumulative: it contains the architecture foundation, streaming dashb
 - return, win rate, profit factor, drawdown, expectancy, and Sharpe proxy
 - isolated paper portfolio and research trade journal
 
-### Sprint 5 — Execution platform
+### Sprint 6 — Execution platform
 
 - broker-neutral order manager and execution ports
 - deterministic local paper broker
@@ -141,4 +141,13 @@ The execution adapter rejects standard live ports. Live trading is not part of t
 
 ## Important notice
 
-This project is for research, education, and paper-trading validation. Yahoo Finance data may be delayed or incomplete. Confirm broker configuration and risk controls before submitting any paper order. No live-trading path is enabled in Sprint 5.
+This project is for research, education, and paper-trading validation. Yahoo Finance data may be delayed or incomplete. Confirm broker configuration and risk controls before submitting any paper order. No live-trading path is enabled in Sprint 6.
+
+
+## Sprint 6 capabilities
+
+- Historical replay from normalized CSV ticks
+- Session recording for repeatable scanner and strategy validation
+- Component health monitoring
+- Runtime metrics and operational status page
+- Replay remains isolated from broker execution
