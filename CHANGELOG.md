@@ -38,3 +38,18 @@ All Sprint 1–3 architecture, dashboard, market analytics, data providers, scan
 - component health checks and runtime metrics registry
 - replay and observability unit tests
 - operational architecture documentation
+
+## 0.6.0-alpha — Sprint 7
+
+### Added
+- guarded saved-strategy automation runner
+- DISABLED, DRY_RUN, and PAPER_ARMED modes
+- per-cycle order cap, open-position cap, symbol cooldown, and positive-ROC guard
+- local paper execution integration through the existing risk engine and order manager
+- JSON Lines automation audit journal and separate execution journal
+- Automation page in the Streamlit terminal
+- automation unit tests and documentation
+
+### Safety
+- automated IBKR routing is not enabled
+- live trading remains unsupported

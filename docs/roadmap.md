@@ -67,3 +67,12 @@ The product roadmap is cumulative: v4.0 includes all capabilities from v1.0 thro
 - component health monitoring
 - runtime metrics
 - safe replay workflow isolated from execution
+
+## Sprint 7 — Guarded strategy automation (complete)
+
+- saved-strategy automation runner
+- disabled, dry-run, and explicitly armed paper modes
+- cycle order limits, position limits, cooldowns, and ROC guard
+- centralized risk-engine and order-manager integration
+- append-only automation audit journal
+- dedicated Automation terminal page

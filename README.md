@@ -1,11 +1,11 @@
 # RD Quant Platform
 
-**Version:** `0.5.0-alpha`  
-**Release:** Sprint 6 — Execution Platform
+**Version:** `0.6.0-alpha`  
+**Release:** Sprint 7 — Guarded Strategy Automation
 
 RD Quant Platform is a modular, event-driven quantitative research and paper-trading platform inspired by the DolphinDB pattern of stateful per-symbol computation followed by cross-sectional analytics.
 
-Sprint 6 is cumulative: it contains the architecture foundation, streaming dashboard, scanner engine, Strategy Lab, and execution platform developed in Sprints 1–5.
+Sprint 7 is cumulative: it contains the architecture foundation, streaming dashboard, scanner engine, Strategy Lab, and execution platform developed in Sprints 1–5.
 
 ## Capabilities
 
@@ -39,7 +39,7 @@ Sprint 6 is cumulative: it contains the architecture foundation, streaming dashb
 - return, win rate, profit factor, drawdown, expectancy, and Sharpe proxy
 - isolated paper portfolio and research trade journal
 
-### Sprint 6 — Execution platform
+### Sprint 5 — Execution platform
 
 - broker-neutral order manager and execution ports
 - deterministic local paper broker
@@ -49,6 +49,15 @@ Sprint 6 is cumulative: it contains the architecture foundation, streaming dashb
 - market, limit, and stop order tickets
 - durable SQLite order/fill audit journal
 - execution order management and fill views
+
+
+### Sprint 7 — Guarded strategy automation
+
+- saved Strategy Lab definitions can run through a guarded automation cycle
+- disabled, dry-run, and explicitly armed local-paper modes
+- order-per-cycle, open-position, cooldown, and positive-ROC safeguards
+- reuse of the centralized risk engine, order manager, and paper broker
+- append-only automation audit journal and dedicated terminal page
 
 ## Architecture
 
@@ -127,9 +136,7 @@ The execution adapter rejects standard live ports. Live trading is not part of t
 
 ## Tests
 
-```text
-32 passed
-```
+Run `pytest` to verify the cumulative Sprint 1–7 suite.
 
 ## Documentation
 
@@ -141,7 +148,7 @@ The execution adapter rejects standard live ports. Live trading is not part of t
 
 ## Important notice
 
-This project is for research, education, and paper-trading validation. Yahoo Finance data may be delayed or incomplete. Confirm broker configuration and risk controls before submitting any paper order. No live-trading path is enabled in Sprint 6.
+This project is for research, education, and paper-trading validation. Yahoo Finance data may be delayed or incomplete. Confirm broker configuration and risk controls before submitting any paper order. No live-trading path is enabled in Sprint 7. Automated IBKR routing is intentionally disabled.
 
 
 ## Sprint 6 capabilities
