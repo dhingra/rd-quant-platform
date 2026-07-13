@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0-alpha — Sprint 5
+
+- Added broker-neutral execution models and ports.
+- Added local paper execution broker.
+- Added explicitly armed IBKR paper broker with live-port rejection.
+- Added pre-trade risk engine, order manager, account synchronization, order management, and SQLite audit journal.
+- Added Execution page with positions, account metrics, risk controls, ticket, orders, and fills.
+- Added execution and risk unit tests.
+
+# Changelog
+
 ## 0.4.0-alpha — Sprint 4
 
 ### Added

@@ -1,32 +1,54 @@
 # RD Quant Platform
 
-**Version:** `0.4.0-alpha`  
-**Sprint:** 3 — Scanner Engine
+**Version:** `0.5.0-alpha`  
+**Release:** Sprint 5 — Execution Platform
 
-RD Quant Platform is a modular, event-driven quantitative market analytics and trading framework inspired by the DolphinDB pattern of per-symbol stateful computation followed by cross-sectional analysis.
+RD Quant Platform is a modular, event-driven quantitative research and paper-trading platform inspired by the DolphinDB pattern of stateful per-symbol computation followed by cross-sectional analytics.
 
-## Sprint 4 deliverables
+Sprint 5 is cumulative: it contains the architecture foundation, streaming dashboard, scanner engine, Strategy Lab, and execution platform developed in Sprints 1–5.
 
-Sprint 4 preserves the complete Sprint 2 dashboard and adds a configurable scanner subsystem as a separate application/domain package.
+## Capabilities
 
-- All Sprint 1 architecture and Sprint 2 market-dashboard capabilities
-- Configurable cross-sectional scanner engine
-- Built-in scans:
-  - Momentum Leaders
-  - High RVOL
-  - Gap Up
-  - Gap Down
-  - Opening Range Breakout
-  - VWAP Reclaim
-- Composable filter definitions
-- Sorting, result direction, and result limits
-- Custom scanner builder in Streamlit
-- YAML-backed saved scans
-- New-match alert engine
-- Scanner alert feed
-- Scanner latency and match-rate metrics
-- Clickable scanner results linked to the shared selected-symbol panel
-- Unit tests for filtering, alerts, and persistence
+### Sprint 1 — Architecture foundation
+
+- ports-and-adapters architecture following SOLID principles
+- immutable domain models and typed interfaces
+- event bus, dependency injection, configuration, logging, and plugin registry
+- independent Yahoo Finance, IBKR, and Simulator packages
+- unit, integration, and CI test scaffolding
+
+### Sprint 2 — Streaming market dashboard
+
+- normalized Simulator, Yahoo, and IBKR market-data inputs
+- event-time ROC, RVOL, VWAP distance, gap, and opening-range factors
+- cross-sectional rankings, breadth, statistics, and sector strength
+- ROC histogram, momentum gauge, Finviz-style treemap, and time-series charts
+- shared clickable symbol selection across dashboard views
+
+### Sprint 3 — Scanner engine
+
+- composable scanner filters and configurable result sorting
+- momentum, RVOL, gap, ORB, and VWAP preset scans
+- custom scanner builder, YAML saved scans, and new-match alerts
+- scanner latency and match-rate metrics
+
+### Sprint 4 — Strategy Lab
+
+- visual entry/exit rule builder and YAML saved strategies
+- event-time backtesting with equity curve and detailed trade list
+- return, win rate, profit factor, drawdown, expectancy, and Sharpe proxy
+- isolated paper portfolio and research trade journal
+
+### Sprint 5 — Execution platform
+
+- broker-neutral order manager and execution ports
+- deterministic local paper broker
+- guarded IBKR paper broker for TWS `7497` and Gateway `4002` only
+- synchronized account metrics and broker positions
+- pre-trade risk controls: order/position limits, buying power, daily loss, open orders, shorting policy, and kill switch
+- market, limit, and stop order tickets
+- durable SQLite order/fill audit journal
+- execution order management and fill views
 
 ## Architecture
 
@@ -34,31 +56,41 @@ Sprint 4 preserves the complete Sprint 2 dashboard and adds a configurable scann
 Yahoo / IBKR / Simulator
           │
           ▼
-   normalized Tick
+   normalized market events
           │
           ▼
- ReactiveFactorEngine
+ Reactive Factor Engine
  ROC · RVOL · VWAP · Gap · ORB
           │
           ▼
- Cross-sectional analytics
+ Cross-sectional Analytics
  ranking · breadth · sectors · statistics
           │
-          ├──────────────► ScannerEngine
-          │                filters · sorting · limits
-          │                         │
-          │                         ├── AlertEngine
-          │                         └── YAML Scan Repository
-          ▼
- DashboardController
+          ├────────► Scanner Engine ───────► Alerts
+          │
+          ├────────► Strategy Lab ─────────► Backtester
           │
           ▼
- Streamlit terminal
+      Order Request
+          │
+          ▼
+       Risk Engine
+          │
+          ▼
+      Order Manager
+          │
+     ┌────┴──────────┐
+     ▼               ▼
+Local Paper      IBKR Paper
+     │               │
+     └───────┬───────┘
+             ▼
+   SQLite Audit Journal
 ```
 
-The scanner engine has no Streamlit, broker, or data-source dependency. It consumes normalized `FactorSnapshot` objects and returns immutable `ScanResult` values.
+The Streamlit terminal is a thin presentation layer. Analytics, scanning, strategy, risk, portfolio, and execution logic live in framework packages under `src/rdqp`.
 
-## Run
+## Installation
 
 Python 3.11 or newer:
 
@@ -70,59 +102,43 @@ pytest
 streamlit run apps/terminal/streamlit_app.py
 ```
 
-For simulator-only use:
+For Simulator-only operation:
 
 ```bash
 pip install -e .[dev,ui]
 streamlit run apps/terminal/streamlit_app.py
 ```
 
-## Scanner usage
+## IBKR paper setup
 
-1. Open the **Scanner** view.
-2. Choose a built-in or saved scanner.
-3. Review matches, match rate, and execution latency.
-4. Click a result to make it the platform-wide selected symbol.
-5. Build and save a custom scan using the form.
-6. Enable new-match alerts to see symbols as they enter the active scan.
+1. Log into a **paper** account in TWS or IB Gateway.
+2. Enable API socket clients in IBKR API settings.
+3. Use TWS paper port `7497` or Gateway paper port `4002`.
+4. Keep market-data and execution client IDs distinct.
+5. In the Execution page, type `PAPER`, arm routing, then connect.
 
-Custom scans are stored in `data/saved_scans.yaml`.
+The execution adapter rejects standard live ports. Live trading is not part of this release.
 
-## Data-source notes
+## Data persistence
 
-- **Simulator:** deterministic session data with enough history to calculate ROC immediately.
-- **Yahoo Finance:** delayed, polled one-minute bars for learning and research.
-- **IBKR:** read-only paper snapshots through TWS or IB Gateway. Data entitlements and line limits apply.
+- saved scanners: `data/saved_scans.yaml`
+- saved strategies: `data/saved_strategies.yaml`
+- execution orders and fills: `data/execution_journal.sqlite3`
 
-## Quality checks
+## Tests
 
-```bash
-pytest --cov=rdqp
-ruff check src tests apps
-black --check src tests apps
-mypy src/rdqp
+```text
+32 passed
 ```
 
-## Roadmap
+## Documentation
 
-- Sprint 1: architecture foundation — complete
-- Sprint 2: streaming market dashboard — complete
-- Sprint 4: configurable scanner engine, saved scans, and alerts — complete
-- Sprint 4: strategy lab, backtesting, performance analytics, paper portfolio
-- Sprint 5: IBKR paper execution, portfolio, risk, orders, and journal
+- `docs/architecture.md`
+- `docs/scanner_engine.md`
+- `docs/strategy_lab.md`
+- `docs/execution_platform.md`
+- `docs/roadmap.md`
 
-Execution remains disabled by default.
+## Important notice
 
-
-## Sprint 4 — Strategy Lab
-
-Sprint 4 is cumulative and retains the streaming dashboard and scanner engine. It adds:
-
-- visual entry and exit rule builder
-- saved YAML strategies
-- event-time backtesting over loaded factor histories
-- equity curve, trade list, total return, win rate, profit factor, drawdown, expectancy, and Sharpe proxy
-- isolated in-memory paper portfolio
-- manual paper orders, live marking, positions, P&L, and trade journal
-
-Open **Strategy Lab** in the terminal after loading data. Simulator mode provides the deepest immediately available history. No Strategy Lab action sends an IBKR order.
+This project is for research, education, and paper-trading validation. Yahoo Finance data may be delayed or incomplete. Confirm broker configuration and risk controls before submitting any paper order. No live-trading path is enabled in Sprint 5.

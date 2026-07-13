@@ -50,3 +50,12 @@
 ## Release mapping
 
 The product roadmap is cumulative: v4.0 includes all capabilities from v1.0 through v3.0. Development tags remain `0.x` until the first stable end-to-end release.
+
+
+## Sprint 5 — Execution Platform (complete)
+
+- IBKR paper execution
+- portfolio and account synchronization
+- risk controls and kill switch
+- order management
+- durable trade journal

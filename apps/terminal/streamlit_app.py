@@ -1,4 +1,4 @@
-"""RD Quant Terminal — Sprint 2 streaming market dashboard."""
+"""RD Quant Terminal — Sprint 5 cumulative research and paper-execution platform."""
 
 from __future__ import annotations
 
@@ -22,6 +22,11 @@ from rdqp.platform.config.settings import load_settings
 from rdqp.scanners import FilterOperator, ScanDefinition, ScannerFilter, default_scans
 from rdqp.scanners.infrastructure.yaml_repository import YamlScanRepository
 from rdqp.portfolio import PaperPortfolio
+from rdqp.execution import (
+    ExecutionOrderType, ExecutionSide, IBKRPaperBroker, OrderManager, OrderRequest,
+    PaperExecutionBroker, SQLiteTradeJournal,
+)
+from rdqp.risk import RiskLimits
 from rdqp.strategies import BacktestEngine, RuleOperator, StrategyDefinition, StrategyRule
 from rdqp.strategies.infrastructure import YamlStrategyRepository
 
@@ -94,7 +99,7 @@ def refresh() -> None:
 header_left, header_right = st.columns([5, 1])
 with header_left:
     st.title("RD Quant Platform")
-    st.caption("Sprint 4 · Strategy Lab · visual rules → backtesting → paper portfolio")
+    st.caption("Sprint 5 · Execution Platform · risk-gated paper orders → broker sync → durable journal")
 with header_right:
     if st.button("Refresh data", type="primary", use_container_width=True):
         try:
@@ -118,7 +123,7 @@ metric_cols[3].metric("Std dev", "n/a" if stats.standard_deviation is None else 
 metric_cols[4].metric("Skew", "n/a" if stats.skew is None else f"{stats.skew:+.2f}")
 metric_cols[5].metric("Positive", "n/a" if stats.positive_percentage is None else f"{stats.positive_percentage:.0%}")
 
-page = st.segmented_control("View", ["Leaderboard", "Scanner", "Strategy Lab", "Market", "Architecture"], default="Leaderboard")
+page = st.segmented_control("View", ["Leaderboard", "Scanner", "Strategy Lab", "Execution", "Market", "Architecture"], default="Leaderboard")
 
 if page == "Leaderboard":
     st.subheader("Live cross-sectional momentum")
@@ -533,6 +538,171 @@ elif page == "Strategy Lab":
             st.caption("No paper trades.")
         else:
             st.dataframe(journal_df, use_container_width=True, hide_index=True)
+
+elif page == "Execution":
+    st.subheader("Execution Platform")
+    st.caption("Risk-gated local paper execution and explicitly armed IBKR paper trading. Live-account ports are blocked by design.")
+
+    prices = {record.symbol: record.price for record in records}
+    broker_mode = st.radio("Execution broker", ["Local Paper", "IBKR Paper"], horizontal=True)
+
+    with st.expander("Risk controls", expanded=True):
+        r1, r2, r3, r4 = st.columns(4)
+        max_order_notional = r1.number_input("Max order notional", min_value=100.0, value=10_000.0, step=500.0)
+        max_position_notional = r2.number_input("Max position notional", min_value=100.0, value=25_000.0, step=1_000.0)
+        max_daily_loss = r3.number_input("Daily loss limit", min_value=100.0, value=1_000.0, step=100.0)
+        max_open_orders = int(r4.number_input("Max open orders", min_value=0, value=10, step=1))
+        r5, r6, r7 = st.columns(3)
+        max_symbol_quantity = int(r5.number_input("Max symbol quantity", min_value=1, value=1_000, step=10))
+        allow_short = r6.toggle("Allow short selling", value=False)
+        kill_switch = r7.toggle("Kill switch", value=False, help="Reject every new order immediately")
+    limits = RiskLimits(
+        max_order_notional=float(max_order_notional),
+        max_position_notional=float(max_position_notional),
+        max_daily_loss=float(max_daily_loss),
+        max_open_orders=max_open_orders,
+        max_symbol_quantity=max_symbol_quantity,
+        allow_short_selling=allow_short,
+        kill_switch=kill_switch,
+    )
+
+    journal_path = ROOT / "data/execution_journal.sqlite3"
+    if "execution_journal" not in st.session_state:
+        st.session_state.execution_journal = SQLiteTradeJournal(journal_path)
+    journal = st.session_state.execution_journal
+
+    manager = None
+    if broker_mode == "Local Paper":
+        if "paper_execution_broker" not in st.session_state:
+            broker = PaperExecutionBroker(100_000.0)
+            broker.connect()
+            st.session_state.paper_execution_broker = broker
+        broker = st.session_state.paper_execution_broker
+        manager = OrderManager(broker, journal)
+        st.success("Local paper broker connected")
+    else:
+        st.warning("IBKR orders can affect your paper account. Confirm TWS/IB Gateway is logged into PAPER and API access is enabled.")
+        ib = settings.market_data.ibkr
+        c1, c2, c3 = st.columns(3)
+        host = c1.text_input("IBKR host", value=ib.host)
+        port = int(c2.number_input("Paper port", value=int(ib.port), step=1, help="TWS paper: 7497; Gateway paper: 4002"))
+        client_id = int(c3.number_input("Execution client ID", value=int(ib.client_id) + 100, step=1))
+        confirm = st.text_input("Type PAPER to arm IBKR execution")
+        armed = st.toggle("Arm IBKR paper order routing", value=False)
+        connect_col, disconnect_col = st.columns(2)
+        if connect_col.button("Connect IBKR paper", disabled=not (armed and confirm == "PAPER")):
+            try:
+                old = st.session_state.pop("ibkr_execution_broker", None)
+                if old is not None:
+                    old.disconnect()
+                broker = IBKRPaperBroker(host, port, client_id, paper_only=True)
+                broker.connect()
+                st.session_state.ibkr_execution_broker = broker
+                st.success("Connected to IBKR paper execution")
+            except Exception as exc:
+                st.error(str(exc))
+        if disconnect_col.button("Disconnect IBKR paper"):
+            broker = st.session_state.pop("ibkr_execution_broker", None)
+            if broker is not None:
+                broker.disconnect()
+            st.info("IBKR execution disconnected")
+        broker = st.session_state.get("ibkr_execution_broker")
+        if broker is not None:
+            manager = OrderManager(broker, journal)
+            st.success("IBKR paper broker connected and armed for this session")
+        else:
+            st.info("IBKR paper execution is not connected. Order ticket remains disabled.")
+
+    account = None
+    if manager is not None:
+        try:
+            account = manager.broker.account_snapshot(prices)
+            a = st.columns(6)
+            a[0].metric("Account", account.account_id)
+            a[1].metric("Net liquidation", f"${account.net_liquidation:,.2f}")
+            a[2].metric("Cash", f"${account.cash:,.2f}")
+            a[3].metric("Buying power", f"${account.buying_power:,.2f}")
+            a[4].metric("Realized P&L", f"${account.realized_pnl:+,.2f}")
+            a[5].metric("Unrealized P&L", f"${account.unrealized_pnl:+,.2f}")
+        except Exception as exc:
+            st.error(f"Account synchronization failed: {exc}")
+            account = None
+
+    st.markdown("#### Order ticket")
+    if records and manager is not None and account is not None:
+        available_symbols = [record.symbol for record in records]
+        selected = st.selectbox(
+            "Order symbol", available_symbols,
+            index=available_symbols.index(st.session_state.selected_symbol) if st.session_state.get("selected_symbol") in available_symbols else 0,
+        )
+        reference_price = prices[selected]
+        t1, t2, t3, t4 = st.columns(4)
+        order_side = ExecutionSide(t1.selectbox("Side", [item.value for item in ExecutionSide]))
+        order_type = ExecutionOrderType(t2.selectbox("Order type", [item.value for item in ExecutionOrderType]))
+        quantity = int(t3.number_input("Quantity", min_value=1, value=10, step=1))
+        t4.metric("Reference price", f"${reference_price:,.2f}")
+        p1, p2 = st.columns(2)
+        limit_price = p1.number_input("Limit price", min_value=0.01, value=float(reference_price), step=0.01, disabled=order_type is not ExecutionOrderType.LIMIT)
+        stop_price = p2.number_input("Stop price", min_value=0.01, value=float(reference_price), step=0.01, disabled=order_type is not ExecutionOrderType.STOP)
+        note = st.text_input("Order note", value="Manual terminal order")
+        estimated_notional = reference_price * quantity
+        st.caption(f"Estimated notional: ${estimated_notional:,.2f}")
+        if st.button("Submit risk-checked order", type="primary"):
+            request = OrderRequest(
+                symbol=selected,
+                side=order_side,
+                quantity=quantity,
+                order_type=order_type,
+                limit_price=float(limit_price) if order_type is ExecutionOrderType.LIMIT else None,
+                stop_price=float(stop_price) if order_type is ExecutionOrderType.STOP else None,
+                reference_price=float(reference_price),
+                strategy="manual-terminal",
+                note=note,
+            )
+            order = manager.submit(request, limits, prices)
+            if order.status.value in {"REJECTED", "ERROR"}:
+                st.error(f"{order.status.value}: {order.message}")
+            else:
+                st.success(f"{order.status.value}: {order.request.quantity} {order.request.symbol} · {order.message}")
+                st.rerun()
+    else:
+        st.info("Load market data and connect an execution broker to enable the order ticket.")
+
+    if account is not None:
+        position_rows = [{
+            "symbol": p.symbol, "quantity": p.quantity, "average_cost": p.average_cost,
+            "market_price": p.market_price, "market_value": p.market_value,
+            "unrealized_pnl": p.unrealized_pnl,
+        } for p in account.positions]
+        st.markdown("#### Broker positions")
+        if position_rows:
+            st.dataframe(pd.DataFrame(position_rows), use_container_width=True, hide_index=True)
+        else:
+            st.caption("No broker positions.")
+
+    st.markdown("#### Order management and audit journal")
+    orders = journal.recent_orders(100)
+    order_rows = [{
+        "submitted_at": o.submitted_at, "order_id": o.order_id, "broker_order_id": o.broker_order_id,
+        "mode": o.mode.value, "symbol": o.request.symbol, "side": o.request.side.value,
+        "quantity": o.request.quantity, "type": o.request.order_type.value,
+        "status": o.status.value, "fill_price": o.average_fill_price, "message": o.message,
+    } for o in orders]
+    if order_rows:
+        st.dataframe(pd.DataFrame(order_rows), use_container_width=True, hide_index=True)
+    else:
+        st.caption("No execution orders have been journaled.")
+    fills = journal.recent_fills(100)
+    fill_rows = [{
+        "timestamp": f.timestamp, "fill_id": f.fill_id, "order_id": f.order_id,
+        "symbol": f.symbol, "side": f.side.value, "quantity": f.quantity,
+        "price": f.price, "commission": f.commission,
+    } for f in fills]
+    st.markdown("#### Trade fills")
+    if fill_rows:
+        st.dataframe(pd.DataFrame(fill_rows), use_container_width=True, hide_index=True)
+    else:
+        st.caption("No fills recorded.")
 
 elif page == "Market":
     st.subheader("Market analytics")
