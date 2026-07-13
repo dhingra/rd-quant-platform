@@ -34,9 +34,7 @@ class SQLiteAutomationStateStore:
 
     def get(self, key: str, default: Any = None) -> Any:
         with closing(self._connect()) as conn, conn:
-            row = conn.execute(
-                "SELECT value FROM automation_state WHERE key=?", (key,)
-            ).fetchone()
+            row = conn.execute("SELECT value FROM automation_state WHERE key=?", (key,)).fetchone()
         return default if row is None else json.loads(row[0])
 
     def delete(self, key: str) -> None:

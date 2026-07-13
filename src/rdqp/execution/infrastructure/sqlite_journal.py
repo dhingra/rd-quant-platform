@@ -29,23 +29,25 @@ class SQLiteTradeJournal(TradeJournal):
         return sqlite3.connect(self._path)
 
     def _initialize(self) -> None:
-        with closing(self._connect()) as conn:
-            with conn:
-                conn.executescript(
-                    """
+        with closing(self._connect()) as conn, conn:
+            conn.executescript(
+                """
                     CREATE TABLE IF NOT EXISTS orders (
                         order_id TEXT PRIMARY KEY, broker_order_id TEXT, mode TEXT, status TEXT,
                         symbol TEXT, side TEXT, quantity INTEGER, order_type TEXT,
                         limit_price REAL, stop_price REAL, reference_price REAL,
                         strategy TEXT, note TEXT, submitted_at TEXT, updated_at TEXT,
-                        filled_quantity INTEGER, average_fill_price REAL, commission REAL, message TEXT
+                        filled_quantity INTEGER,
+                        average_fill_price REAL,
+                        commission REAL,
+                        message TEXT
                     );
                     CREATE TABLE IF NOT EXISTS fills (
                         fill_id TEXT PRIMARY KEY, order_id TEXT, broker_order_id TEXT, symbol TEXT,
                         side TEXT, quantity INTEGER, price REAL, commission REAL, timestamp TEXT
                     );
                     """
-                )
+            )
 
     def record_order(self, order: ManagedOrder) -> None:
         r = order.request
