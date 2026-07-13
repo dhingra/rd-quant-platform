@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from time import perf_counter
 from typing import Any
 
@@ -12,8 +12,8 @@ from rdqp.scanners.domain.models import (
     FilterOperator,
     ScanDefinition,
     ScanMatch,
-    ScanResult,
     ScannerFilter,
+    ScanResult,
 )
 
 
@@ -40,7 +40,7 @@ class ScannerEngine:
             ),
             evaluated_count=len(rows),
             elapsed_ms=elapsed_ms,
-            generated_at=datetime.now(timezone.utc),
+            generated_at=datetime.now(UTC),
         )
 
     @classmethod

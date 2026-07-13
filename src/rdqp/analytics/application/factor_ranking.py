@@ -16,7 +16,7 @@ class FactorWeights:
     gap: float = 0.10
     sector_strength: float = 0.10
 
-    def normalized(self) -> "FactorWeights":
+    def normalized(self) -> FactorWeights:
         values = [self.roc, self.rvol, self.vwap_distance, self.gap, self.sector_strength]
         if any(value < 0 for value in values):
             raise ValueError("Factor weights cannot be negative")

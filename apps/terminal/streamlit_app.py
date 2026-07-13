@@ -1,10 +1,11 @@
 """RD Quant Terminal — Sprint 10 cumulative quant intelligence platform."""
+# ruff: noqa: E402, E501
 
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
@@ -16,14 +17,19 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+from rdqp.automation import (
+    AutomationConfig,
+    AutomationMode,
+    AutomationRunner,
+    AutomationScheduler,
+    JsonlAutomationJournal,
+    MarketSessionPolicy,
+    SchedulerConfig,
+    SQLiteAutomationStateStore,
+)
 from rdqp.dashboard.application.controller import DashboardController
-from rdqp.market.domain.models import Tick
 from rdqp.datasources.ibkr.snapshot import fetch_snapshot_ticks
 from rdqp.datasources.yahoo.snapshot import fetch_latest_ticks
-from rdqp.platform.config.settings import load_settings
-from rdqp.scanners import FilterOperator, ScanDefinition, ScannerFilter, default_scans
-from rdqp.scanners.infrastructure.yaml_repository import YamlScanRepository
-from rdqp.portfolio import PaperPortfolio
 from rdqp.execution import (
     ExecutionOrderType,
     ExecutionSide,
@@ -33,15 +39,22 @@ from rdqp.execution import (
     PaperExecutionBroker,
     SQLiteTradeJournal,
 )
-from rdqp.risk import RiskLimits
-from rdqp.strategies import BacktestEngine, RuleOperator, StrategyDefinition, StrategyRule
-from rdqp.strategies.infrastructure import YamlStrategyRepository
+from rdqp.market.domain.models import Tick
+from rdqp.notifications import (
+    InMemoryNotificationSink,
+    JsonlNotificationSink,
+    NotificationRouter,
+)
+from rdqp.observability import HealthMonitor, HealthStatus, MetricsRegistry
+from rdqp.platform.config.settings import load_settings
+from rdqp.portfolio import PaperPortfolio
+from rdqp.replay import CsvTickStore, ReplayEngine
 from rdqp.research.application.comparison import compare_strategies
 from rdqp.research.application.metrics import extended_metrics
-from rdqp.research.application.robustness import analyze_robustness
-from rdqp.research.application.scorecard import ScorecardEngine
 from rdqp.research.application.monte_carlo import MonteCarloEngine
 from rdqp.research.application.optimizer import GridSearchOptimizer
+from rdqp.research.application.robustness import analyze_robustness
+from rdqp.research.application.scorecard import ScorecardEngine
 from rdqp.research.application.walk_forward import WalkForwardEngine
 from rdqp.research.domain.models import (
     OptimizationObjective,
@@ -49,23 +62,11 @@ from rdqp.research.domain.models import (
     ResearchExperiment,
 )
 from rdqp.research.infrastructure.sqlite_repository import SqliteExperimentRepository
-from rdqp.replay import CsvTickStore, ReplayEngine
-from rdqp.observability import HealthMonitor, HealthStatus, MetricsRegistry
-from rdqp.automation import (
-    AutomationConfig,
-    AutomationMode,
-    AutomationRunner,
-    JsonlAutomationJournal,
-    AutomationScheduler,
-    MarketSessionPolicy,
-    SchedulerConfig,
-    SQLiteAutomationStateStore,
-)
-from rdqp.notifications import (
-    InMemoryNotificationSink,
-    JsonlNotificationSink,
-    NotificationRouter,
-)
+from rdqp.risk import RiskLimits
+from rdqp.scanners import FilterOperator, ScanDefinition, ScannerFilter, default_scans
+from rdqp.scanners.infrastructure.yaml_repository import YamlScanRepository
+from rdqp.strategies import BacktestEngine, RuleOperator, StrategyDefinition, StrategyRule
+from rdqp.strategies.infrastructure import YamlStrategyRepository
 
 st.set_page_config(page_title="RD Quant Platform", page_icon="📈", layout="wide")
 settings = load_settings(ROOT / "config/app.yaml")

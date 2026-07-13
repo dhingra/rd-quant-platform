@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from rdqp.analytics.domain.models import FactorSnapshot
 from rdqp.strategies import BacktestEngine, RuleOperator, StrategyDefinition, StrategyRule
@@ -24,7 +24,7 @@ def snapshot(t, price, roc):
 
 
 def test_backtest_generates_trade_and_metrics():
-    start = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    start = datetime(2026, 1, 1, tzinfo=UTC)
     history = [
         snapshot(start, 100, 0.02),
         snapshot(start + timedelta(minutes=1), 105, 0.03),

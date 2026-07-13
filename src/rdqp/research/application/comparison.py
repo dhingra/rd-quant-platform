@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 from rdqp.research.application.metrics import extended_metrics
 from rdqp.strategies.domain.models import BacktestResult

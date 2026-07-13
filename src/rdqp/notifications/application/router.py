@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Protocol
 
 from rdqp.notifications.domain.models import Notification
@@ -26,7 +26,7 @@ class NotificationRouter:
         self._sinks.append(sink)
 
     def publish(self, notification: Notification, now: datetime | None = None) -> bool:
-        now = now or datetime.now(timezone.utc)
+        now = now or datetime.now(UTC)
         key = (
             notification.dedupe_key
             or f"{notification.category}:{notification.symbol}:{notification.title}"

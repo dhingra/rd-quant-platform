@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from rdqp.analytics.domain.models import FactorSnapshot
 from rdqp.strategies import RuleOperator, StrategyRule, evaluate_rule
@@ -7,7 +7,7 @@ from rdqp.strategies import RuleOperator, StrategyRule, evaluate_rule
 def snap(**overrides):
     values = dict(
         symbol="AAPL",
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         price=101.0,
         volume=1000,
         sector="Technology",

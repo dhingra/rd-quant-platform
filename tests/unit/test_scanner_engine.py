@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from rdqp.analytics.domain.models import FactorSnapshot
 from rdqp.scanners import FilterOperator, ScanDefinition, ScannerEngine, ScannerFilter
@@ -7,7 +7,7 @@ from rdqp.scanners import FilterOperator, ScanDefinition, ScannerEngine, Scanner
 def snapshot(symbol: str, roc: float | None, rvol: float | None, price: float = 100.0):
     return FactorSnapshot(
         symbol=symbol,
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         price=price,
         volume=1000,
         sector="Technology",

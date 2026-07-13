@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from rdqp.execution.domain.models import (
@@ -73,7 +73,7 @@ class PaperExecutionBroker(ExecutionBroker):
             raise ValueError("A fill price is required for paper execution")
         symbol = request.symbol.upper()
         current = self._positions.get(symbol)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if request.side is ExecutionSide.BUY:
             cost = price * request.quantity + self._commission
             if cost > self._cash:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from rdqp.analytics.application.factor_engine import ReactiveFactorEngine
 from rdqp.analytics.application.market_analytics import market_statistics, sector_strength
@@ -12,7 +12,7 @@ from rdqp.dashboard.application.sectors import sector_for
 from rdqp.market.domain.models import Tick
 from rdqp.scanners.application.alerts import AlertEngine
 from rdqp.scanners.application.engine import ScannerEngine
-from rdqp.scanners.domain.models import ScanDefinition, ScanResult, ScannerAlert
+from rdqp.scanners.domain.models import ScanDefinition, ScannerAlert, ScanResult
 
 
 class DashboardController:
@@ -21,7 +21,7 @@ class DashboardController:
         self.engine = ReactiveFactorEngine(roc_window_seconds)
         self._random = random.Random(seed)
         self._prices = {s: self._random.uniform(30, 500) for s in self.symbols}
-        self._clock = datetime.now(timezone.utc) - timedelta(seconds=roc_window_seconds + 30)
+        self._clock = datetime.now(UTC) - timedelta(seconds=roc_window_seconds + 30)
         self._seen: set[tuple[str, datetime]] = set()
         self.scanner = ScannerEngine()
         self.alerts = AlertEngine()

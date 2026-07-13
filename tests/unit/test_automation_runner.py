@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from rdqp.analytics.domain.models import FactorSnapshot
@@ -16,7 +16,7 @@ from rdqp.strategies.domain.models import RuleOperator, StrategyDefinition, Stra
 def snap(symbol="AAPL", roc=0.02, rank=1):
     return FactorSnapshot(
         symbol,
-        datetime.now(timezone.utc),
+        datetime.now(UTC),
         100.0,
         1000,
         "Technology",
@@ -68,7 +68,7 @@ def test_paper_armed_submits(tmp_path):
 def test_cooldown_deduplicates(tmp_path):
     runner = AutomationRunner(manager(tmp_path))
     cfg = AutomationConfig(mode=AutomationMode.DRY_RUN, cooldown_seconds=300)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     runner.run_cycle(strategy(), [snap()], cfg, RiskLimits(), now)
     run = runner.run_cycle(strategy(), [snap()], cfg, RiskLimits(), now)
     assert run.decisions[0].action == "SKIP"

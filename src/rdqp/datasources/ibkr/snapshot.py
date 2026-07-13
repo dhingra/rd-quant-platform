@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from rdqp.common.exceptions import ProviderUnavailableError
 from rdqp.market.domain.models import Tick
@@ -30,7 +30,7 @@ def fetch_snapshot_ticks(
                 result.append(
                     Tick(
                         symbol,
-                        datetime.now(timezone.utc),
+                        datetime.now(UTC),
                         float(price),
                         float(ticker.volume or 0),
                         "ibkr",

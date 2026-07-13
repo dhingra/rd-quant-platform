@@ -1,7 +1,8 @@
 """Risk-gated strategy automation. Live trading is intentionally unsupported."""
 
 from __future__ import annotations
-from datetime import datetime, timezone
+
+from datetime import UTC, datetime
 from typing import Protocol
 
 from rdqp.analytics.domain.models import FactorSnapshot
@@ -38,7 +39,7 @@ class AutomationRunner:
         limits: RiskLimits,
         now: datetime | None = None,
     ) -> AutomationRun:
-        now = now or datetime.now(timezone.utc)
+        now = now or datetime.now(UTC)
         if config.mode is AutomationMode.DISABLED:
             run = AutomationRun(
                 strategy.name,

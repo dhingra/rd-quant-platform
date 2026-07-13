@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from typing import Callable
+from datetime import UTC, datetime, timedelta
 
 from rdqp.automation.domain.scheduling import SchedulerConfig, SessionDecision
 from rdqp.notifications import Notification, NotificationRouter, NotificationSeverity
@@ -38,7 +38,7 @@ class AutomationScheduler:
         self._last_message = "Scheduler created"
 
     def start(self, now: datetime | None = None) -> None:
-        now = now or datetime.now(timezone.utc)
+        now = now or datetime.now(UTC)
         self._running = True
         self._next_run_at = now
         self._last_message = "Scheduler started"
@@ -54,11 +54,11 @@ class AutomationScheduler:
 
     def resume(self, now: datetime | None = None) -> None:
         self._paused = False
-        self._next_run_at = now or datetime.now(timezone.utc)
+        self._next_run_at = now or datetime.now(UTC)
         self._last_message = "Scheduler resumed"
 
     def run_due(self, now: datetime | None = None) -> bool:
-        now = now or datetime.now(timezone.utc)
+        now = now or datetime.now(UTC)
         if not self._running or self._next_run_at is None or now < self._next_run_at:
             return False
         decision = self.config.session_policy.evaluate(now, paused=self._paused)

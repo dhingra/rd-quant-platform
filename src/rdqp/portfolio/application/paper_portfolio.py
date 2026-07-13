@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from rdqp.portfolio.domain.models import (
     JournalEntry,
@@ -34,9 +34,7 @@ class PaperPortfolio:
         average = (old_cost + cost) / new_qty
         self.cash -= cost
         self._positions[symbol] = PaperPosition(symbol, new_qty, average, price)
-        entry = JournalEntry(
-            datetime.now(timezone.utc), symbol, OrderSide.BUY, quantity, price, 0.0, note
-        )
+        entry = JournalEntry(datetime.now(UTC), symbol, OrderSide.BUY, quantity, price, 0.0, note)
         self._journal.append(entry)
         return entry
 
@@ -54,7 +52,7 @@ class PaperPortfolio:
         else:
             del self._positions[symbol]
         entry = JournalEntry(
-            datetime.now(timezone.utc), symbol, OrderSide.SELL, quantity, price, realized, note
+            datetime.now(UTC), symbol, OrderSide.SELL, quantity, price, realized, note
         )
         self._journal.append(entry)
         return entry

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timezone
+from datetime import UTC
 
 from rdqp.common.exceptions import ProviderUnavailableError
 from rdqp.market.domain.models import Tick
@@ -35,11 +35,7 @@ def fetch_latest_ticks(
             valid = sf.dropna(subset=["Close"]).tail(max_bars)
             for timestamp, row in valid.iterrows():
                 dt = timestamp.to_pydatetime()
-                dt = (
-                    dt.replace(tzinfo=timezone.utc)
-                    if dt.tzinfo is None
-                    else dt.astimezone(timezone.utc)
-                )
+                dt = dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt.astimezone(UTC)
                 ticks.append(
                     Tick(symbol, dt, float(row["Close"]), float(row.get("Volume", 0)), "yahoo")
                 )

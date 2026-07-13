@@ -5,6 +5,7 @@ from __future__ import annotations
 import itertools
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
+from typing import Any, cast
 
 from rdqp.analytics.domain.models import FactorSnapshot
 from rdqp.research.domain.models import (
@@ -43,7 +44,10 @@ class GridSearchOptimizer:
         value_sets = [parameter.values for parameter in ranges]
         for values in itertools.product(*value_sets):
             parameters = dict(zip(names, values, strict=True))
-            candidate = replace(definition, **parameters)
+            candidate = replace(
+                definition,
+                **cast(dict[str, Any], parameters),
+            )
             result = self._backtester.run(candidate, histories)
             trials.append(OptimizationTrial(parameters, self.score(result, objective), result))
 
