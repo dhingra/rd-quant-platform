@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0-alpha — Sprint 3
+
+- Added configurable, composable cross-sectional scanner engine.
+- Added Momentum, High RVOL, Gap Up, Gap Down, ORB, and VWAP Reclaim presets.
+- Added YAML-backed saved scanner definitions.
+- Added custom scanner builder and scanner result row selection.
+- Added new-match alert engine and terminal alert feed.
+- Added scan latency, universe size, and match-rate metrics.
+- Added scanner domain, application, and infrastructure tests.
+- Preserved all Sprint 1 and Sprint 2 functionality.
+
 ## 0.2.0-alpha — Sprint 2
 
 - Added reactive factor engine and event-time ROC.

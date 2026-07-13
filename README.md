@@ -1,40 +1,32 @@
 # RD Quant Platform
 
-**Version:** `0.2.0-alpha`  
-**Sprint:** 2 — Streaming Dashboard
+**Version:** `0.3.0-alpha`  
+**Sprint:** 3 — Scanner Engine
 
 RD Quant Platform is a modular, event-driven quantitative market analytics and trading framework inspired by the DolphinDB pattern of per-symbol stateful computation followed by cross-sectional analysis.
 
-## Sprint 2 deliverables
+## Sprint 3 deliverables
 
-Sprint 2 builds on the SOLID foundation from Sprint 1 and adds a runnable market dashboard without moving business logic into Streamlit.
+Sprint 3 preserves the complete Sprint 2 dashboard and adds a configurable scanner subsystem as a separate application/domain package.
 
-- Live multi-source dashboard adapters:
-  - Simulator with immediate event-time history
-  - Yahoo Finance recent 1-minute bars
-  - IBKR TWS / Gateway read-only paper snapshots
-- Incremental `ReactiveFactorEngine`
-  - event-time ROC
-  - RVOL
-  - VWAP and VWAP distance
-  - gap analysis
-  - opening-range state
-- Cross-sectional ranking
-- Market statistics:
-  - mean ROC
-  - median ROC
-  - standard deviation
-  - skew
-  - percentage positive
-- Market breadth
-- ROC histogram
-- momentum breadth gauge
-- sector ranking
-- Finviz-style treemap
-- clickable leader and laggard rows
-- selected-symbol price, VWAP, ROC, and volume charts
-- controller layer that keeps analytics out of the UI
-- unit and integration tests
+- All Sprint 1 architecture and Sprint 2 market-dashboard capabilities
+- Configurable cross-sectional scanner engine
+- Built-in scans:
+  - Momentum Leaders
+  - High RVOL
+  - Gap Up
+  - Gap Down
+  - Opening Range Breakout
+  - VWAP Reclaim
+- Composable filter definitions
+- Sorting, result direction, and result limits
+- Custom scanner builder in Streamlit
+- YAML-backed saved scans
+- New-match alert engine
+- Scanner alert feed
+- Scanner latency and match-rate metrics
+- Clickable scanner results linked to the shared selected-symbol panel
+- Unit tests for filtering, alerts, and persistence
 
 ## Architecture
 
@@ -52,6 +44,11 @@ Yahoo / IBKR / Simulator
  Cross-sectional analytics
  ranking · breadth · sectors · statistics
           │
+          ├──────────────► ScannerEngine
+          │                filters · sorting · limits
+          │                         │
+          │                         ├── AlertEngine
+          │                         └── YAML Scan Repository
           ▼
  DashboardController
           │
@@ -59,7 +56,7 @@ Yahoo / IBKR / Simulator
  Streamlit terminal
 ```
 
-The Streamlit layer renders data and handles user interaction. It does not calculate factors or rankings.
+The scanner engine has no Streamlit, broker, or data-source dependency. It consumes normalized `FactorSnapshot` objects and returns immutable `ScanResult` values.
 
 ## Run
 
@@ -73,30 +70,29 @@ pytest
 streamlit run apps/terminal/streamlit_app.py
 ```
 
-For the smallest simulator-only installation:
+For simulator-only use:
 
 ```bash
 pip install -e .[dev,ui]
 streamlit run apps/terminal/streamlit_app.py
 ```
 
+## Scanner usage
+
+1. Open the **Scanner** view.
+2. Choose a built-in or saved scanner.
+3. Review matches, match rate, and execution latency.
+4. Click a result to make it the platform-wide selected symbol.
+5. Build and save a custom scan using the form.
+6. Enable new-match alerts to see symbols as they enter the active scan.
+
+Custom scans are stored in `data/saved_scans.yaml`.
+
 ## Data-source notes
 
-### Simulator
-
-Starts with enough synthetic event-time history to calculate ROC immediately. It is deterministic within a dashboard session and is intended for development and demonstrations.
-
-### Yahoo Finance
-
-Yahoo supplies delayed, polled one-minute bars. It is suitable for learning, research, and dashboard prototyping, but not for execution-grade decisions.
-
-### IBKR
-
-The Sprint 2 terminal requests read-only market-data snapshots from TWS or IB Gateway. Defaults are configured for the TWS paper port (`7497`) and delayed data type (`3`). Market-data subscriptions and IBKR line limits still apply.
-
-## Row selection
-
-Leader and laggard tables use Streamlit's single-row selection event. The selected table row updates one shared `selected_symbol`, which drives every detail card and chart. This fixes the earlier mismatch between a clicked row and the displayed ticker.
+- **Simulator:** deterministic session data with enough history to calculate ROC immediately.
+- **Yahoo Finance:** delayed, polled one-minute bars for learning and research.
+- **IBKR:** read-only paper snapshots through TWS or IB Gateway. Data entitlements and line limits apply.
 
 ## Quality checks
 
@@ -111,7 +107,7 @@ mypy src/rdqp
 
 - Sprint 1: architecture foundation — complete
 - Sprint 2: streaming market dashboard — complete
-- Sprint 3: configurable scanner engine, saved scans, and alerts
+- Sprint 3: configurable scanner engine, saved scans, and alerts — complete
 - Sprint 4: strategy lab, backtesting, performance analytics, paper portfolio
 - Sprint 5: IBKR paper execution, portfolio, risk, orders, and journal
 
