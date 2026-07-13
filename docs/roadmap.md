@@ -76,3 +76,13 @@ The product roadmap is cumulative: v4.0 includes all capabilities from v1.0 thro
 - centralized risk-engine and order-manager integration
 - append-only automation audit journal
 - dedicated Automation terminal page
+
+
+## Sprint 8 — Scheduled automation and alert operations (complete)
+
+- operator-controlled interval scheduler
+- market-session, weekend, and pause guards
+- repeated-failure shutdown protection
+- deduplicated notification routing and local alert center
+- persistent scheduler/operator state
+- dedicated Scheduler & Alerts terminal page

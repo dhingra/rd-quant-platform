@@ -1,11 +1,11 @@
 # RD Quant Platform
 
-**Version:** `0.6.0-alpha`  
-**Release:** Sprint 7 — Guarded Strategy Automation
+**Version:** `0.7.0-alpha`  
+**Release:** Sprint 8 — Scheduled Automation and Alert Operations
 
 RD Quant Platform is a modular, event-driven quantitative research and paper-trading platform inspired by the DolphinDB pattern of stateful per-symbol computation followed by cross-sectional analytics.
 
-Sprint 7 is cumulative: it contains the architecture foundation, streaming dashboard, scanner engine, Strategy Lab, and execution platform developed in Sprints 1–5.
+Sprint 8 is cumulative: it contains the architecture foundation, streaming dashboard, scanner engine, Strategy Lab, and execution platform developed in Sprints 1–5.
 
 ## Capabilities
 
@@ -58,6 +58,16 @@ Sprint 7 is cumulative: it contains the architecture foundation, streaming dashb
 - order-per-cycle, open-position, cooldown, and positive-ROC safeguards
 - reuse of the centralized risk engine, order manager, and paper broker
 - append-only automation audit journal and dedicated terminal page
+
+### Sprint 8 — Scheduled automation and alert operations
+
+- operator-controlled interval scheduler
+- market-session, weekend, and pause guards
+- repeated-failure shutdown protection
+- deduplicated operational notification routing
+- terminal notification center and JSONL alert journal
+- persistent SQLite scheduler/operator state
+- dedicated Scheduler & Alerts terminal page
 
 ## Architecture
 
@@ -136,7 +146,7 @@ The execution adapter rejects standard live ports. Live trading is not part of t
 
 ## Tests
 
-Run `pytest` to verify the cumulative Sprint 1–7 suite.
+Run `pytest` to verify the cumulative Sprint 1–8 suite.
 
 ## Documentation
 
@@ -144,7 +154,8 @@ Run `pytest` to verify the cumulative Sprint 1–7 suite.
 - `docs/scanner_engine.md`
 - `docs/strategy_lab.md`
 - `docs/execution_platform.md`
-- `docs/roadmap.md`
+- `docs/automation.md`
+- `docs/sprint8_operations.md`
 
 ## Important notice
 

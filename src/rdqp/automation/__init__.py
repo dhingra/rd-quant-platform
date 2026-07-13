@@ -1,10 +1,13 @@
-"""Guarded strategy automation for paper-trading workflows."""
-
-from .application.runner import AutomationRunner
-from .domain.models import AutomationConfig, AutomationDecision, AutomationMode, AutomationRun
-from .infrastructure.jsonl_journal import JsonlAutomationJournal
+from rdqp.automation.application import AutomationRunner, AutomationScheduler, SchedulerStatus
+from rdqp.automation.domain import (
+    AutomationConfig, AutomationDecision, AutomationMode, AutomationRun,
+    MarketSessionPolicy, SchedulerConfig, SessionDecision,
+)
+from rdqp.automation.infrastructure import JsonlAutomationJournal, SQLiteAutomationStateStore
 
 __all__ = [
     "AutomationConfig", "AutomationDecision", "AutomationMode", "AutomationRun",
-    "AutomationRunner", "JsonlAutomationJournal",
+    "AutomationRunner", "AutomationScheduler", "JsonlAutomationJournal",
+    "MarketSessionPolicy", "SchedulerConfig", "SchedulerStatus", "SessionDecision",
+    "SQLiteAutomationStateStore",
 ]
