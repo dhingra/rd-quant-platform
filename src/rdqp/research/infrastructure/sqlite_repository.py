@@ -61,7 +61,9 @@ class SqliteExperimentRepository:
                     experiment.notes,
                 ),
             )
-            return int(cursor.lastrowid)
+            if cursor.lastrowid is None:
+                raise RuntimeError("SQLite did not return an experiment ID")
+            return cursor.lastrowid
 
     def list(self, limit: int = 100) -> tuple[ResearchExperiment, ...]:
         with self._connect() as connection:
@@ -108,7 +110,7 @@ class SqliteExperimentRepository:
             description=strategy_raw.get("description", ""),
         )
         return ResearchExperiment(
-            id=int(row[0]),
+            id=int(str(row[0])),
             name=str(row[1]),
             created_at=datetime.fromisoformat(str(row[2])),
             strategy=strategy,
