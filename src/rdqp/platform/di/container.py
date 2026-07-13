@@ -23,7 +23,7 @@ class Container:
         self._factories[key] = factory
         if not singleton:
             self._singletons.pop(key, None)
-        setattr(factory, "_rdqp_singleton", singleton)
+        factory._rdqp_singleton = singleton
 
     def resolve(self, key: type[T] | str) -> T:
         if key in self._singletons:

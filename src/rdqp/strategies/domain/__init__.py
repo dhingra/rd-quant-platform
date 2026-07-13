@@ -9,6 +9,11 @@ from .models import (
 )
 
 __all__ = [
-    "BacktestResult", "EquityPoint", "PerformanceMetrics", "RuleOperator",
-    "StrategyDefinition", "StrategyRule", "TradeRecord",
+    "BacktestResult",
+    "EquityPoint",
+    "PerformanceMetrics",
+    "RuleOperator",
+    "StrategyDefinition",
+    "StrategyRule",
+    "TradeRecord",
 ]

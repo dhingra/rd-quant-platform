@@ -7,9 +7,9 @@ from rdqp.scanners.domain.models import (
     FilterOperator,
     ScanDefinition,
     ScanMatch,
-    ScanResult,
     ScannerAlert,
     ScannerFilter,
+    ScanResult,
 )
 
 __all__ = [

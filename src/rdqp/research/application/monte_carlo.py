@@ -10,7 +10,9 @@ from rdqp.strategies.domain.models import BacktestResult
 
 
 class MonteCarloEngine:
-    def run(self, result: BacktestResult, simulations: int = 1_000, seed: int = 7) -> MonteCarloSummary:
+    def run(
+        self, result: BacktestResult, simulations: int = 1_000, seed: int = 7
+    ) -> MonteCarloSummary:
         if simulations <= 0:
             raise ValueError("simulations must be positive")
         returns = [trade.return_pct for trade in result.trades]

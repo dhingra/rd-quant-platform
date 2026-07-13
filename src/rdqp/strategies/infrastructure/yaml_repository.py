@@ -23,17 +23,25 @@ class YamlStrategyRepository:
         items = {item.name: item for item in self.list()}
         items[definition.name] = definition
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(yaml.safe_dump([self._to_dict(item) for item in items.values()], sort_keys=False))
+        self.path.write_text(
+            yaml.safe_dump([self._to_dict(item) for item in items.values()], sort_keys=False)
+        )
 
     def delete(self, name: str) -> None:
         items = [item for item in self.list() if item.name != name]
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(yaml.safe_dump([self._to_dict(item) for item in items], sort_keys=False))
+        self.path.write_text(
+            yaml.safe_dump([self._to_dict(item) for item in items], sort_keys=False)
+        )
 
     @staticmethod
     def _to_dict(item: StrategyDefinition) -> dict[str, object]:
         def rules(values: tuple[StrategyRule, ...]) -> list[dict[str, object]]:
-            return [{"field": rule.field, "operator": rule.operator.value, "value": rule.value} for rule in values]
+            return [
+                {"field": rule.field, "operator": rule.operator.value, "value": rule.value}
+                for rule in values
+            ]
+
         return {
             "name": item.name,
             "description": item.description,
@@ -50,7 +58,11 @@ class YamlStrategyRepository:
     def _from_dict(data: dict[str, object]) -> StrategyDefinition:
         def rules(key: str) -> tuple[StrategyRule, ...]:
             raw = data.get(key, [])
-            return tuple(StrategyRule(str(x["field"]), RuleOperator(str(x["operator"])), x.get("value")) for x in raw)  # type: ignore[index,union-attr]
+            return tuple(
+                StrategyRule(str(x["field"]), RuleOperator(str(x["operator"])), x.get("value"))
+                for x in raw
+            )  # type: ignore[index,union-attr]
+
         return StrategyDefinition(
             name=str(data["name"]),
             description=str(data.get("description", "")),
@@ -59,6 +71,10 @@ class YamlStrategyRepository:
             initial_capital=float(data.get("initial_capital", 100_000)),
             allocation_pct=float(data.get("allocation_pct", 0.10)),
             commission_per_trade=float(data.get("commission_per_trade", 0.0)),
-            stop_loss_pct=None if data.get("stop_loss_pct") is None else float(data["stop_loss_pct"]),
-            take_profit_pct=None if data.get("take_profit_pct") is None else float(data["take_profit_pct"]),
+            stop_loss_pct=None
+            if data.get("stop_loss_pct") is None
+            else float(data["stop_loss_pct"]),
+            take_profit_pct=None
+            if data.get("take_profit_pct") is None
+            else float(data["take_profit_pct"]),
         )

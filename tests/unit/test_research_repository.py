@@ -9,7 +9,16 @@ def test_experiment_round_trip(tmp_path) -> None:
     repo = SqliteExperimentRepository(tmp_path / "research.sqlite3")
     strategy = StrategyDefinition("Momentum", (StrategyRule("roc_pct", RuleOperator.GT, 1.0),))
     identifier = repo.save(
-        ResearchExperiment(None, "trial", datetime.now(UTC), strategy, "sharpe_ratio", {"stop_loss_pct": 0.02}, {"total_return": 0.1}, "note")
+        ResearchExperiment(
+            None,
+            "trial",
+            datetime.now(UTC),
+            strategy,
+            "sharpe_ratio",
+            {"stop_loss_pct": 0.02},
+            {"total_return": 0.1},
+            "note",
+        )
     )
     loaded = repo.list()
     assert identifier == 1

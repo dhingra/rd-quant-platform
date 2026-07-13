@@ -47,8 +47,7 @@ def extended_metrics(result: BacktestResult, periods_per_year: float = 252.0) ->
         payoff = statistics.fmean(wins) / statistics.fmean(losses)
 
     holding = [
-        (trade.exit_time - trade.entry_time).total_seconds() / 3600.0
-        for trade in result.trades
+        (trade.exit_time - trade.entry_time).total_seconds() / 3600.0 for trade in result.trades
     ]
     average_holding = statistics.fmean(holding) if holding else None
     return ExtendedMetrics(

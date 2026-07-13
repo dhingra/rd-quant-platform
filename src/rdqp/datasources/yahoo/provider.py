@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator, Sequence
-from datetime import timezone
+from datetime import UTC
 
 from rdqp.common.exceptions import ProviderUnavailableError
 from rdqp.market.domain.models import Tick
@@ -33,7 +33,9 @@ class YahooProvider(MarketDataProvider):
         try:
             import yfinance  # noqa: F401
         except ImportError as exc:
-            raise ProviderUnavailableError("Install the 'yahoo' extra to use YahooProvider") from exc
+            raise ProviderUnavailableError(
+                "Install the 'yahoo' extra to use YahooProvider"
+            ) from exc
         self._running = True
 
     async def disconnect(self) -> None:
@@ -68,9 +70,9 @@ class YahooProvider(MarketDataProvider):
                     self._last_seen[symbol] = timestamp
                     dt = timestamp.to_pydatetime()
                     if dt.tzinfo is None:
-                        dt = dt.replace(tzinfo=timezone.utc)
+                        dt = dt.replace(tzinfo=UTC)
                     else:
-                        dt = dt.astimezone(timezone.utc)
+                        dt = dt.astimezone(UTC)
                     yield Tick(
                         symbol=symbol,
                         timestamp=dt,
