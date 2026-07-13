@@ -59,3 +59,11 @@ The product roadmap is cumulative: v4.0 includes all capabilities from v1.0 thro
 - risk controls and kill switch
 - order management
 - durable trade journal
+
+## Sprint 6 — Replay, observability, and release hardening (complete)
+
+- deterministic historical market replay
+- normalized session recording
+- component health monitoring
+- runtime metrics
+- safe replay workflow isolated from execution

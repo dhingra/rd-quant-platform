@@ -28,3 +28,13 @@
 ### Retained
 
 All Sprint 1–3 architecture, dashboard, market analytics, data providers, scanners, saved scans, and alerts.
+
+## 0.6.0-alpha — Sprint 6
+
+### Added
+- normalized CSV market-session recorder
+- deterministic event-time replay engine with batching and optional pacing
+- Replay & Ops terminal page
+- component health checks and runtime metrics registry
+- replay and observability unit tests
+- operational architecture documentation

@@ -16,6 +16,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from rdqp.dashboard.application.controller import DashboardController
+from rdqp.market.domain.models import Tick
 from rdqp.datasources.ibkr.snapshot import fetch_snapshot_ticks
 from rdqp.datasources.yahoo.snapshot import fetch_latest_ticks
 from rdqp.platform.config.settings import load_settings
@@ -29,6 +30,8 @@ from rdqp.execution import (
 from rdqp.risk import RiskLimits
 from rdqp.strategies import BacktestEngine, RuleOperator, StrategyDefinition, StrategyRule
 from rdqp.strategies.infrastructure import YamlStrategyRepository
+from rdqp.replay import CsvTickStore, ReplayEngine
+from rdqp.observability import HealthMonitor, HealthStatus, MetricsRegistry
 
 st.set_page_config(page_title="RD Quant Platform", page_icon="📈", layout="wide")
 settings = load_settings(ROOT / "config/app.yaml")
@@ -123,7 +126,7 @@ metric_cols[3].metric("Std dev", "n/a" if stats.standard_deviation is None else 
 metric_cols[4].metric("Skew", "n/a" if stats.skew is None else f"{stats.skew:+.2f}")
 metric_cols[5].metric("Positive", "n/a" if stats.positive_percentage is None else f"{stats.positive_percentage:.0%}")
 
-page = st.segmented_control("View", ["Leaderboard", "Scanner", "Strategy Lab", "Execution", "Market", "Architecture"], default="Leaderboard")
+page = st.segmented_control("View", ["Leaderboard", "Scanner", "Strategy Lab", "Execution", "Market", "Replay & Ops", "Architecture"], default="Leaderboard")
 
 if page == "Leaderboard":
     st.subheader("Live cross-sectional momentum")
@@ -758,8 +761,67 @@ elif page == "Market":
         },
     )
 
+elif page == "Replay & Ops":
+    st.subheader("Historical replay and operational health")
+    st.caption("Record normalized factor history, replay it deterministically, and inspect runtime health.")
+
+    if "ops_metrics" not in st.session_state:
+        st.session_state.ops_metrics = MetricsRegistry()
+    metrics = st.session_state.ops_metrics
+    metrics.set("ranked_symbols", len(records), "symbols")
+    metrics.set("history_points", sum(len(v) for v in controller.all_histories().values()), "ticks")
+
+    monitor = HealthMonitor()
+    monitor.register(
+        "market-data snapshot",
+        lambda: (HealthStatus.HEALTHY, f"{len(records)} symbols available")
+        if records else (HealthStatus.DEGRADED, "No market snapshot loaded"),
+    )
+    monitor.register(
+        "execution journal",
+        lambda: (HealthStatus.HEALTHY, "SQLite journal available")
+        if (ROOT / "data").exists() else (HealthStatus.DEGRADED, "Data directory missing"),
+    )
+    health_rows = [{
+        "component": item.name, "status": item.status.value, "message": item.message,
+        "latency_ms": item.latency_ms, "checked_at": item.checked_at,
+    } for item in monitor.run()]
+    st.markdown("#### Component health")
+    st.dataframe(pd.DataFrame(health_rows), use_container_width=True, hide_index=True)
+
+    metric_rows = [{
+        "metric": item.name, "value": item.value, "unit": item.unit, "recorded_at": item.recorded_at,
+    } for item in metrics.snapshot()]
+    st.markdown("#### Runtime metrics")
+    st.dataframe(pd.DataFrame(metric_rows), use_container_width=True, hide_index=True)
+
+    st.markdown("#### Session recorder")
+    replay_path = ROOT / "data" / "market_session.csv"
+    left, right = st.columns(2)
+    with left:
+        if st.button("Save current history", use_container_width=True):
+            ticks = []
+            for symbol, history in controller.all_histories().items():
+                ticks.extend(
+                    Tick(symbol, row.timestamp, row.price, row.volume, "recorded") for row in history
+                )
+            count = CsvTickStore().save(replay_path, ticks)
+            metrics.increment("sessions_recorded")
+            st.success(f"Saved {count:,} normalized ticks to {replay_path.relative_to(ROOT)}")
+    with right:
+        if st.button("Replay saved session", use_container_width=True, disabled=not replay_path.exists()):
+            loaded = CsvTickStore().load(replay_path)
+            replay_controller = DashboardController(symbols, lookback)
+            result = ReplayEngine().replay(loaded, replay_controller.ingest, batch_size=500)
+            st.session_state.controller = replay_controller
+            metrics.increment("replayed_ticks", result.processed, "ticks")
+            st.success(f"Replayed {result.processed:,} ticks in event-time order. Reloading dashboard state.")
+            st.rerun()
+
+    st.info("Replay uses normalized CSV ticks and does not place orders. It is safe for scanner and strategy validation.")
+
 else:
-    st.subheader("Sprint 4 architecture")
+    st.subheader("Sprint 6 architecture")
     st.code(
         """Yahoo / IBKR / Simulator adapters
               │
@@ -781,7 +843,9 @@ else:
               ├── PaperPortfolio + trade journal
               │
               ▼
- thin Streamlit terminal""",
+ thin Streamlit terminal
+              ├── deterministic replay
+              └── health + runtime metrics""",
         language="text",
     )
     st.markdown(
