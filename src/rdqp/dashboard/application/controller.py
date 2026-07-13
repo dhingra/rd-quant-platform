@@ -57,6 +57,10 @@ class DashboardController:
     def symbol_history(self, symbol: str) -> tuple[FactorSnapshot, ...]:
         return self.engine.history(symbol)
 
+    def all_histories(self) -> dict[str, tuple[FactorSnapshot, ...]]:
+        """Return immutable per-symbol history for backtesting and research consumers."""
+        return {symbol: self.engine.history(symbol) for symbol in self.symbols}
+
     def run_scan(self, definition: ScanDefinition) -> ScanResult:
         return self.scanner.run(definition, self.records())
 
