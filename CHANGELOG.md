@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.0-alpha — Sprint 2
+
+- Added reactive factor engine and event-time ROC.
+- Added RVOL, VWAP distance, gap, and opening-range analytics.
+- Added cross-sectional ranking, statistics, breadth, and sector strength.
+- Added dashboard controller and full Streamlit market terminal.
+- Added ROC histogram, breadth gauge, treemap, sector ranking, and symbol charts.
+- Added Yahoo recent-bar and IBKR read-only snapshot adapters.
+- Fixed selected-row-to-symbol synchronization.
+- Added analytics and dashboard integration tests.
+
+
 ## 0.1.0-alpha.1
 
 ### Added

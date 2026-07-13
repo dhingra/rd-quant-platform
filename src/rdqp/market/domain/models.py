@@ -1,9 +1,9 @@
 """Immutable market-domain models."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Mapping
 
 
 class Side(StrEnum):
@@ -27,7 +27,7 @@ class OrderStatus(StrEnum):
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 @dataclass(frozen=True, slots=True)
