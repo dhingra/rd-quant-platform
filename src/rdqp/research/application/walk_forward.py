@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
-from typing import Any, cast
 from datetime import datetime
+from typing import Any, cast
 
 from rdqp.analytics.domain.models import FactorSnapshot
 from rdqp.research.application.optimizer import GridSearchOptimizer

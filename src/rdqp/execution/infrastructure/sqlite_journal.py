@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+from contextlib import closing
 from datetime import datetime
 from pathlib import Path
 
@@ -28,26 +29,27 @@ class SQLiteTradeJournal(TradeJournal):
         return sqlite3.connect(self._path)
 
     def _initialize(self) -> None:
-        with self._connect() as conn:
-            conn.executescript(
-                """
-                CREATE TABLE IF NOT EXISTS orders (
-                    order_id TEXT PRIMARY KEY, broker_order_id TEXT, mode TEXT, status TEXT,
-                    symbol TEXT, side TEXT, quantity INTEGER, order_type TEXT,
-                    limit_price REAL, stop_price REAL, reference_price REAL,
-                    strategy TEXT, note TEXT, submitted_at TEXT, updated_at TEXT,
-                    filled_quantity INTEGER, average_fill_price REAL, commission REAL, message TEXT
-                );
-                CREATE TABLE IF NOT EXISTS fills (
-                    fill_id TEXT PRIMARY KEY, order_id TEXT, broker_order_id TEXT, symbol TEXT,
-                    side TEXT, quantity INTEGER, price REAL, commission REAL, timestamp TEXT
-                );
-                """
-            )
+        with closing(self._connect()) as conn:
+            with conn:
+                conn.executescript(
+                    """
+                    CREATE TABLE IF NOT EXISTS orders (
+                        order_id TEXT PRIMARY KEY, broker_order_id TEXT, mode TEXT, status TEXT,
+                        symbol TEXT, side TEXT, quantity INTEGER, order_type TEXT,
+                        limit_price REAL, stop_price REAL, reference_price REAL,
+                        strategy TEXT, note TEXT, submitted_at TEXT, updated_at TEXT,
+                        filled_quantity INTEGER, average_fill_price REAL, commission REAL, message TEXT
+                    );
+                    CREATE TABLE IF NOT EXISTS fills (
+                        fill_id TEXT PRIMARY KEY, order_id TEXT, broker_order_id TEXT, symbol TEXT,
+                        side TEXT, quantity INTEGER, price REAL, commission REAL, timestamp TEXT
+                    );
+                    """
+                )
 
     def record_order(self, order: ManagedOrder) -> None:
         r = order.request
-        with self._connect() as conn:
+        with closing(self._connect()) as conn, conn:
             conn.execute(
                 """INSERT OR REPLACE INTO orders VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
@@ -74,7 +76,7 @@ class SQLiteTradeJournal(TradeJournal):
             )
 
     def record_fill(self, fill: ExecutionFill) -> None:
-        with self._connect() as conn:
+        with closing(self._connect()) as conn, conn:
             conn.execute(
                 """INSERT OR REPLACE INTO fills VALUES (?,?,?,?,?,?,?,?,?)""",
                 (
@@ -91,7 +93,7 @@ class SQLiteTradeJournal(TradeJournal):
             )
 
     def recent_orders(self, limit: int = 100) -> tuple[ManagedOrder, ...]:
-        with self._connect() as conn:
+        with closing(self._connect()) as conn, conn:
             rows = conn.execute(
                 "SELECT * FROM orders ORDER BY submitted_at DESC LIMIT ?", (limit,)
             ).fetchall()
@@ -126,7 +128,7 @@ class SQLiteTradeJournal(TradeJournal):
         return tuple(result)
 
     def recent_fills(self, limit: int = 100) -> tuple[ExecutionFill, ...]:
-        with self._connect() as conn:
+        with closing(self._connect()) as conn, conn:
             rows = conn.execute(
                 "SELECT * FROM fills ORDER BY timestamp DESC LIMIT ?", (limit,)
             ).fetchall()
