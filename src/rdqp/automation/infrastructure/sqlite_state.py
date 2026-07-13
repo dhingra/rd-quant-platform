@@ -14,7 +14,12 @@ class SQLiteAutomationStateStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self._connect() as conn:
             conn.execute(
-                "CREATE TABLE IF NOT EXISTS automation_state (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+                """
+                CREATE TABLE IF NOT EXISTS automation_state (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL
+                )
+                """
             )
 
     def set(self, key: str, value: Any) -> None:

@@ -1,4 +1,5 @@
 """RD Quant Terminal — Sprint 9 cumulative research and automation platform."""
+# ruff: noqa: E402, E501
 
 from __future__ import annotations
 
