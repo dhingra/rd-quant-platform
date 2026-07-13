@@ -1,9 +1,10 @@
-"""RD Quant Terminal — Sprint 7 cumulative automation and paper-execution platform."""
+"""RD Quant Terminal — Sprint 9 cumulative research and automation platform."""
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+from datetime import UTC, datetime
 
 import pandas as pd
 import plotly.express as px
@@ -30,6 +31,14 @@ from rdqp.execution import (
 from rdqp.risk import RiskLimits
 from rdqp.strategies import BacktestEngine, RuleOperator, StrategyDefinition, StrategyRule
 from rdqp.strategies.infrastructure import YamlStrategyRepository
+from rdqp.research.application.metrics import extended_metrics
+from rdqp.research.application.monte_carlo import MonteCarloEngine
+from rdqp.research.application.optimizer import GridSearchOptimizer
+from rdqp.research.application.walk_forward import WalkForwardEngine
+from rdqp.research.domain.models import (
+    OptimizationObjective, ParameterRange, ResearchExperiment,
+)
+from rdqp.research.infrastructure.sqlite_repository import SqliteExperimentRepository
 from rdqp.replay import CsvTickStore, ReplayEngine
 from rdqp.observability import HealthMonitor, HealthStatus, MetricsRegistry
 from rdqp.automation import (
@@ -109,7 +118,7 @@ def refresh() -> None:
 header_left, header_right = st.columns([5, 1])
 with header_left:
     st.title("RD Quant Platform")
-    st.caption("Sprint 8 · Scheduled paper automation · session guards · alerts · persistent operations state")
+    st.caption("Sprint 9 · Research Lab · optimization · walk-forward validation · Monte Carlo")
 with header_right:
     if st.button("Refresh data", type="primary", use_container_width=True):
         try:
@@ -133,7 +142,7 @@ metric_cols[3].metric("Std dev", "n/a" if stats.standard_deviation is None else 
 metric_cols[4].metric("Skew", "n/a" if stats.skew is None else f"{stats.skew:+.2f}")
 metric_cols[5].metric("Positive", "n/a" if stats.positive_percentage is None else f"{stats.positive_percentage:.0%}")
 
-page = st.segmented_control("View", ["Leaderboard", "Scanner", "Strategy Lab", "Execution", "Automation", "Scheduler & Alerts", "Market", "Replay & Ops", "Architecture"], default="Leaderboard")
+page = st.segmented_control("View", ["Leaderboard", "Scanner", "Strategy Lab", "Research Lab", "Execution", "Automation", "Scheduler & Alerts", "Market", "Replay & Ops", "Architecture"], default="Leaderboard")
 
 if page == "Leaderboard":
     st.subheader("Live cross-sectional momentum")
@@ -548,6 +557,210 @@ elif page == "Strategy Lab":
             st.caption("No paper trades.")
         else:
             st.dataframe(journal_df, use_container_width=True, hide_index=True)
+
+
+elif page == "Research Lab":
+    st.subheader("Research & Optimization Lab")
+    st.caption("Run deterministic grid searches, walk-forward validation, Monte Carlo analysis, and save reproducible experiments.")
+
+    if "strategy_repository" not in st.session_state:
+        st.session_state.strategy_repository = YamlStrategyRepository(ROOT / "data/saved_strategies.yaml")
+    research_repository = SqliteExperimentRepository(ROOT / "data/research_experiments.sqlite3")
+    saved_research_strategies = {item.name: item for item in st.session_state.strategy_repository.list()}
+
+    if not saved_research_strategies:
+        st.info("Save a strategy in Strategy Lab before using Research Lab.")
+    else:
+        strategy_name = st.selectbox("Research strategy", sorted(saved_research_strategies), key="research_strategy")
+        research_definition = saved_research_strategies[strategy_name]
+        histories = controller.all_histories()
+        optimizer_tab, walk_tab, monte_tab, experiments_tab = st.tabs(
+            ["Optimizer", "Walk forward", "Monte Carlo", "Experiments"]
+        )
+
+        with optimizer_tab:
+            st.markdown("#### Grid-search risk parameters")
+            c1, c2, c3 = st.columns(3)
+            objective = OptimizationObjective(
+                c1.selectbox("Objective", [item.value for item in OptimizationObjective])
+            )
+            stop_values = c2.text_input("Stop loss values (%)", "1,2,3")
+            target_values = c3.text_input("Take profit values (%)", "2,4,6")
+            allocation_values = st.text_input("Allocation values (%)", "5,10,20")
+
+            def parse_percentages(raw: str) -> tuple[float, ...]:
+                return tuple(float(value.strip()) / 100.0 for value in raw.split(",") if value.strip())
+
+            if st.button("Run optimization", type="primary"):
+                try:
+                    ranges = (
+                        ParameterRange("stop_loss_pct", parse_percentages(stop_values)),
+                        ParameterRange("take_profit_pct", parse_percentages(target_values)),
+                        ParameterRange("allocation_pct", parse_percentages(allocation_values)),
+                    )
+                    with st.spinner("Evaluating parameter combinations..."):
+                        optimized = GridSearchOptimizer().run(
+                            research_definition, histories, ranges, objective
+                        )
+                    st.session_state.optimization_result = optimized
+                    st.success(f"Optimization complete: {len(optimized.trials)} trials")
+                except ValueError as exc:
+                    st.error(str(exc))
+
+            optimized = st.session_state.get("optimization_result")
+            if optimized is not None:
+                trial_rows = []
+                for index, trial in enumerate(optimized.trials, start=1):
+                    trial_rows.append(
+                        {
+                            "rank": index,
+                            **{key: value * 100 for key, value in trial.parameters.items()},
+                            "score": trial.score,
+                            "return_pct": trial.result.metrics.total_return * 100,
+                            "sharpe": trial.result.metrics.sharpe_ratio,
+                            "max_drawdown_pct": trial.result.metrics.max_drawdown * 100,
+                            "trades": trial.result.metrics.trade_count,
+                        }
+                    )
+                st.dataframe(pd.DataFrame(trial_rows), use_container_width=True, hide_index=True)
+                best = optimized.best_trial
+                if best is not None:
+                    b1, b2, b3, b4 = st.columns(4)
+                    b1.metric("Best score", f"{best.score:.4f}")
+                    b2.metric("Return", f"{best.result.metrics.total_return:+.2%}")
+                    b3.metric("Sharpe", "n/a" if best.result.metrics.sharpe_ratio is None else f"{best.result.metrics.sharpe_ratio:.2f}")
+                    b4.metric("Max drawdown", f"{best.result.metrics.max_drawdown:.2%}")
+                    notes = st.text_input("Experiment notes", key="optimization_notes")
+                    if st.button("Save best experiment"):
+                        metrics = best.result.metrics
+                        experiment = ResearchExperiment(
+                            None,
+                            f"{strategy_name} optimization",
+                            datetime.now(UTC),
+                            research_definition,
+                            optimized.objective.value,
+                            best.parameters,
+                            {
+                                "total_return": metrics.total_return,
+                                "sharpe_ratio": metrics.sharpe_ratio,
+                                "max_drawdown": metrics.max_drawdown,
+                                "profit_factor": metrics.profit_factor,
+                                "trade_count": metrics.trade_count,
+                            },
+                            notes,
+                        )
+                        experiment_id = research_repository.save(experiment)
+                        st.success(f"Saved experiment #{experiment_id}")
+
+        with walk_tab:
+            st.markdown("#### Rolling out-of-sample validation")
+            w1, w2, w3 = st.columns(3)
+            folds = int(w1.number_input("Folds", min_value=1, max_value=10, value=3))
+            train_fraction = w2.slider("Initial training fraction", 0.4, 0.8, 0.6, 0.05)
+            wf_objective = OptimizationObjective(
+                w3.selectbox("Walk-forward objective", [item.value for item in OptimizationObjective])
+            )
+            if st.button("Run walk-forward"):
+                ranges = (
+                    ParameterRange("stop_loss_pct", (0.01, 0.02, 0.03)),
+                    ParameterRange("take_profit_pct", (0.02, 0.04, 0.06)),
+                )
+                with st.spinner("Training and validating folds..."):
+                    st.session_state.walk_forward_result = WalkForwardEngine().run(
+                        research_definition,
+                        histories,
+                        ranges,
+                        train_fraction,
+                        folds,
+                        wf_objective,
+                    )
+            wf = st.session_state.get("walk_forward_result")
+            if wf is not None:
+                w1, w2 = st.columns(2)
+                w1.metric("Compounded OOS return", f"{wf.combined_return:+.2%}")
+                w2.metric("Average fold return", f"{wf.average_out_of_sample_return:+.2%}")
+                rows = [
+                    {
+                        "fold": fold.fold,
+                        "train": f"{fold.train_start:%Y-%m-%d %H:%M} → {fold.train_end:%Y-%m-%d %H:%M}",
+                        "test": f"{fold.test_start:%Y-%m-%d %H:%M} → {fold.test_end:%Y-%m-%d %H:%M}",
+                        "parameters": fold.selected_parameters,
+                        "in_sample_score": fold.in_sample_score,
+                        "oos_return_pct": fold.out_of_sample_result.metrics.total_return * 100,
+                        "oos_trades": fold.out_of_sample_result.metrics.trade_count,
+                    }
+                    for fold in wf.folds
+                ]
+                st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+
+        with monte_tab:
+            st.markdown("#### Trade-sequence Monte Carlo")
+            base_result = st.session_state.get("backtest_result")
+            if base_result is None:
+                st.info("Run a backtest in Strategy Lab first.")
+            else:
+                simulations = int(st.number_input("Simulations", 100, 20_000, 1_000, 100))
+                seed = int(st.number_input("Random seed", 0, 1_000_000, 7))
+                if st.button("Run Monte Carlo"):
+                    st.session_state.monte_carlo_result = MonteCarloEngine().run(
+                        base_result, simulations, seed
+                    )
+                monte = st.session_state.get("monte_carlo_result")
+                if monte is not None:
+                    mc = st.columns(5)
+                    mc[0].metric("Median equity", f"${monte.median_final_equity:,.2f}")
+                    mc[1].metric("5th percentile", f"${monte.percentile_5_final_equity:,.2f}")
+                    mc[2].metric("95th percentile", f"${monte.percentile_95_final_equity:,.2f}")
+                    mc[3].metric("Loss probability", f"{monte.probability_of_loss:.1%}")
+                    mc[4].metric("Median max DD", f"{monte.median_max_drawdown:.2%}")
+                    st.plotly_chart(
+                        px.histogram(
+                            pd.DataFrame({"final_equity": monte.final_equities}),
+                            x="final_equity",
+                            nbins=40,
+                            title="Monte Carlo final-equity distribution",
+                        ),
+                        use_container_width=True,
+                    )
+                    extended = extended_metrics(base_result)
+                    st.markdown("#### Extended performance metrics")
+                    st.dataframe(
+                        pd.DataFrame([{
+                            "annualized_return": extended.annualized_return,
+                            "annualized_volatility": extended.annualized_volatility,
+                            "sortino_ratio": extended.sortino_ratio,
+                            "calmar_ratio": extended.calmar_ratio,
+                            "recovery_factor": extended.recovery_factor,
+                            "payoff_ratio": extended.payoff_ratio,
+                            "average_holding_hours": extended.average_holding_hours,
+                        }]),
+                        use_container_width=True,
+                        hide_index=True,
+                    )
+
+        with experiments_tab:
+            st.markdown("#### Persistent experiment journal")
+            experiments = research_repository.list()
+            if not experiments:
+                st.caption("No experiments saved yet.")
+            else:
+                st.dataframe(
+                    pd.DataFrame([
+                        {
+                            "id": item.id,
+                            "created_at": item.created_at,
+                            "name": item.name,
+                            "strategy": item.strategy.name,
+                            "objective": item.objective,
+                            "parameters": item.parameters,
+                            "metrics": item.metrics,
+                            "notes": item.notes,
+                        }
+                        for item in experiments
+                    ]),
+                    use_container_width=True,
+                    hide_index=True,
+                )
 
 elif page == "Execution":
     st.subheader("Execution Platform")
