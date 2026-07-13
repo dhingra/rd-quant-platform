@@ -1,0 +1,46 @@
+app:
+  name: RD Quant Platform
+  environment: development
+  log_level: INFO
+
+market_data:
+  provider: simulator
+  watchlist:
+    - AAPL
+    - MSFT
+    - NVDA
+    - AMZN
+    - META
+    - GOOGL
+    - TSLA
+    - AMD
+    - NFLX
+    - JPM
+    - CLS
+    - CRDO
+    - MU
+    - SPCX
+    - PLTR
+    - CRWD
+    - INTC
+  simulator:
+    interval_seconds: 1.0
+    initial_price: 100.0
+    volatility: 0.002
+  yahoo:
+    interval: 1m
+    period: 1d
+    poll_seconds: 20
+  ibkr:
+    host: 127.0.0.1
+    port: 7497
+    client_id: 17
+    market_data_type: 3
+
+analytics:
+  roc_window_seconds: 120
+
+execution:
+  enabled: false
+  broker: paper
+  paper_only: true

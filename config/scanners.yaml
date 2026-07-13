@@ -1,0 +1,10 @@
+scanners:
+  momentum:
+    enabled: true
+    min_roc: 0.01
+  high_rvol:
+    enabled: true
+    min_rvol: 2.0
+  gap_up:
+    enabled: true
+    min_gap: 0.02

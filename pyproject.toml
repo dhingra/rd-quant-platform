@@ -1,0 +1,77 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rd-quant-platform"
+version = "0.1.0a1"
+description = "Event-driven quantitative research and execution platform"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "RD Quant Platform" }]
+dependencies = [
+  "PyYAML>=6.0.1",
+]
+
+[project.optional-dependencies]
+ui = ["streamlit>=1.36", "pandas>=2.2", "plotly>=5.22"]
+yahoo = ["yfinance>=0.2.40", "pandas>=2.2"]
+ibkr = ["ib-insync>=0.9.86"]
+dev = [
+  "pytest>=8.2",
+  "pytest-asyncio>=0.23",
+  "pytest-cov>=5.0",
+  "ruff>=0.5",
+  "mypy>=1.10",
+  "black>=24.4",
+  "pre-commit>=3.7",
+  "types-PyYAML>=6.0",
+]
+all = [
+  "streamlit>=1.36",
+  "pandas>=2.2",
+  "plotly>=5.22",
+  "yfinance>=0.2.40",
+  "ib-insync>=0.9.86",
+]
+
+[project.scripts]
+rdqp = "rdqp.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rdqp"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests", "apps"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["B008"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+mypy_path = "src"
+packages = ["rdqp"]
+warn_unused_configs = true
+
+[tool.coverage.run]
+source = ["rdqp"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true

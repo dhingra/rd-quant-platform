@@ -1,0 +1,3 @@
+watchlists:
+  default: [AAPL, MSFT, NVDA, AMZN, META, GOOGL, TSLA, AMD, NFLX, JPM, CLS, CRDO, MU, SPCX, PLTR, CRWD, INTC]
+  semiconductors: [NVDA, AMD, MU, INTC, CRDO]
