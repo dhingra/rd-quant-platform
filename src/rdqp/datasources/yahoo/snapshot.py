@@ -14,12 +14,19 @@ def fetch_latest_ticks(
     try:
         import yfinance as yf
     except ImportError as exc:
-        raise ProviderUnavailableError("Install the yahoo extra: pip install -e .[yahoo,ui]") from exc
+        raise ProviderUnavailableError(
+            "Install the yahoo extra: pip install -e .[yahoo,ui]"
+        ) from exc
     if not symbols:
         return []
     frame = yf.download(
-        symbols, period=period, interval=interval, group_by="ticker", progress=False,
-        threads=True, auto_adjust=False,
+        symbols,
+        period=period,
+        interval=interval,
+        group_by="ticker",
+        progress=False,
+        threads=True,
+        auto_adjust=False,
     )
     ticks: list[Tick] = []
     for symbol in symbols:
@@ -28,7 +35,11 @@ def fetch_latest_ticks(
             valid = sf.dropna(subset=["Close"]).tail(max_bars)
             for timestamp, row in valid.iterrows():
                 dt = timestamp.to_pydatetime()
-                dt = dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+                dt = (
+                    dt.replace(tzinfo=timezone.utc)
+                    if dt.tzinfo is None
+                    else dt.astimezone(timezone.utc)
+                )
                 ticks.append(
                     Tick(symbol, dt, float(row["Close"]), float(row.get("Volume", 0)), "yahoo")
                 )

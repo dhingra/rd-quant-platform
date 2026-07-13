@@ -1,7 +1,12 @@
 from datetime import UTC, datetime, timedelta
 
 from rdqp.research.application.monte_carlo import MonteCarloEngine
-from rdqp.strategies.domain.models import BacktestResult, EquityPoint, PerformanceMetrics, TradeRecord
+from rdqp.strategies.domain.models import (
+    BacktestResult,
+    EquityPoint,
+    PerformanceMetrics,
+    TradeRecord,
+)
 
 
 def test_bootstrap_produces_non_degenerate_distribution() -> None:

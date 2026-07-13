@@ -1,4 +1,5 @@
 """Single-process scheduler for guarded automation cycles."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -96,21 +97,25 @@ class AutomationScheduler:
     def _notify_failure(self, exc: Exception) -> None:
         if self._notifications is None:
             return
-        self._notifications.publish(Notification(
-            category="automation",
-            title="Automation cycle failed",
-            message=str(exc),
-            severity=NotificationSeverity.ERROR,
-            dedupe_key="automation-cycle-failure",
-        ))
+        self._notifications.publish(
+            Notification(
+                category="automation",
+                title="Automation cycle failed",
+                message=str(exc),
+                severity=NotificationSeverity.ERROR,
+                dedupe_key="automation-cycle-failure",
+            )
+        )
 
     def _notify_shutdown(self) -> None:
         if self._notifications is None:
             return
-        self._notifications.publish(Notification(
-            category="automation",
-            title="Automation scheduler stopped",
-            message="Maximum consecutive failures reached.",
-            severity=NotificationSeverity.CRITICAL,
-            dedupe_key="automation-scheduler-stopped",
-        ))
+        self._notifications.publish(
+            Notification(
+                category="automation",
+                title="Automation scheduler stopped",
+                message="Maximum consecutive failures reached.",
+                severity=NotificationSeverity.CRITICAL,
+                dedupe_key="automation-scheduler-stopped",
+            )
+        )

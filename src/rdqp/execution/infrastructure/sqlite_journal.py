@@ -51,11 +51,25 @@ class SQLiteTradeJournal(TradeJournal):
             conn.execute(
                 """INSERT OR REPLACE INTO orders VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
-                    order.order_id, order.broker_order_id, order.mode.value, order.status.value,
-                    r.symbol, r.side.value, r.quantity, r.order_type.value, r.limit_price,
-                    r.stop_price, r.reference_price, r.strategy, r.note,
-                    order.submitted_at.isoformat(), order.updated_at.isoformat(),
-                    order.filled_quantity, order.average_fill_price, order.commission, order.message,
+                    order.order_id,
+                    order.broker_order_id,
+                    order.mode.value,
+                    order.status.value,
+                    r.symbol,
+                    r.side.value,
+                    r.quantity,
+                    r.order_type.value,
+                    r.limit_price,
+                    r.stop_price,
+                    r.reference_price,
+                    r.strategy,
+                    r.note,
+                    order.submitted_at.isoformat(),
+                    order.updated_at.isoformat(),
+                    order.filled_quantity,
+                    order.average_fill_price,
+                    order.commission,
+                    order.message,
                 ),
             )
 
@@ -64,8 +78,14 @@ class SQLiteTradeJournal(TradeJournal):
             conn.execute(
                 """INSERT OR REPLACE INTO fills VALUES (?,?,?,?,?,?,?,?,?)""",
                 (
-                    fill.fill_id, fill.order_id, fill.broker_order_id, fill.symbol,
-                    fill.side.value, fill.quantity, fill.price, fill.commission,
+                    fill.fill_id,
+                    fill.order_id,
+                    fill.broker_order_id,
+                    fill.symbol,
+                    fill.side.value,
+                    fill.quantity,
+                    fill.price,
+                    fill.commission,
                     fill.timestamp.isoformat(),
                 ),
             )
@@ -78,16 +98,29 @@ class SQLiteTradeJournal(TradeJournal):
         result: list[ManagedOrder] = []
         for row in rows:
             request = OrderRequest(
-                symbol=row[4], side=ExecutionSide(row[5]), quantity=row[6],
-                order_type=ExecutionOrderType(row[7]), limit_price=row[8], stop_price=row[9],
-                reference_price=row[10], strategy=row[11], note=row[12],
+                symbol=row[4],
+                side=ExecutionSide(row[5]),
+                quantity=row[6],
+                order_type=ExecutionOrderType(row[7]),
+                limit_price=row[8],
+                stop_price=row[9],
+                reference_price=row[10],
+                strategy=row[11],
+                note=row[12],
             )
             result.append(
                 ManagedOrder(
-                    order_id=row[0], broker_order_id=row[1], mode=ExecutionMode(row[2]),
-                    status=ExecutionStatus(row[3]), request=request,
-                    submitted_at=datetime.fromisoformat(row[13]), updated_at=datetime.fromisoformat(row[14]),
-                    filled_quantity=row[15], average_fill_price=row[16], commission=row[17], message=row[18],
+                    order_id=row[0],
+                    broker_order_id=row[1],
+                    mode=ExecutionMode(row[2]),
+                    status=ExecutionStatus(row[3]),
+                    request=request,
+                    submitted_at=datetime.fromisoformat(row[13]),
+                    updated_at=datetime.fromisoformat(row[14]),
+                    filled_quantity=row[15],
+                    average_fill_price=row[16],
+                    commission=row[17],
+                    message=row[18],
                 )
             )
         return tuple(result)
@@ -99,8 +132,14 @@ class SQLiteTradeJournal(TradeJournal):
             ).fetchall()
         return tuple(
             ExecutionFill(
-                fill_id=row[0], order_id=row[1], broker_order_id=row[2], symbol=row[3],
-                side=ExecutionSide(row[4]), quantity=row[5], price=row[6], commission=row[7],
+                fill_id=row[0],
+                order_id=row[1],
+                broker_order_id=row[2],
+                symbol=row[3],
+                side=ExecutionSide(row[4]),
+                quantity=row[5],
+                price=row[6],
+                commission=row[7],
                 timestamp=datetime.fromisoformat(row[8]),
             )
             for row in rows

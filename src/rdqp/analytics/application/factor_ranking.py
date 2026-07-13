@@ -62,9 +62,7 @@ def rank_factors(
         },
         "gap": {r.symbol: r.gap for r in records if r.gap is not None},
         "sector_strength": {
-            r.symbol: sector_means[r.sector]
-            for r in records
-            if r.sector in sector_means
+            r.symbol: sector_means[r.sector] for r in records if r.sector in sector_means
         },
     }
     standardized = {name: _zscore(values) for name, values in raw.items()}

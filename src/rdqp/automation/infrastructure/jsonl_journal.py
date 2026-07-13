@@ -1,9 +1,11 @@
 """Append-only JSON Lines automation audit journal."""
+
 from __future__ import annotations
 import json
 from dataclasses import asdict
 from pathlib import Path
 from rdqp.automation.domain.models import AutomationRun
+
 
 class JsonlAutomationJournal:
     def __init__(self, path: str | Path) -> None:

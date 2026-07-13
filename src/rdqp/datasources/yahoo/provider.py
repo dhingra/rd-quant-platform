@@ -33,7 +33,9 @@ class YahooProvider(MarketDataProvider):
         try:
             import yfinance  # noqa: F401
         except ImportError as exc:
-            raise ProviderUnavailableError("Install the 'yahoo' extra to use YahooProvider") from exc
+            raise ProviderUnavailableError(
+                "Install the 'yahoo' extra to use YahooProvider"
+            ) from exc
         self._running = True
 
     async def disconnect(self) -> None:

@@ -53,8 +53,7 @@ class ScorecardEngine:
                 metrics.sharpe_ratio is not None and metrics.sharpe_ratio >= minimum_sharpe
             ),
             "profit_factor_acceptable": (
-                metrics.profit_factor is not None
-                and metrics.profit_factor >= minimum_profit_factor
+                metrics.profit_factor is not None and metrics.profit_factor >= minimum_profit_factor
             ),
         }
         score = round(sum(checks.values()) / len(checks) * 100)

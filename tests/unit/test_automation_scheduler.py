@@ -4,7 +4,9 @@ from rdqp.automation import AutomationScheduler, MarketSessionPolicy, SchedulerC
 
 
 def always_open() -> MarketSessionPolicy:
-    return MarketSessionPolicy(timezone_name="UTC", start_time=time(0, 0), end_time=time(23, 59), weekdays_only=False)
+    return MarketSessionPolicy(
+        timezone_name="UTC", start_time=time(0, 0), end_time=time(23, 59), weekdays_only=False
+    )
 
 
 def test_scheduler_runs_due_cycle() -> None:

@@ -47,7 +47,9 @@ class IBKRPaperBroker(ExecutionBroker):
         try:
             from ib_insync import IB
         except ImportError as exc:
-            raise ProviderUnavailableError("Install the 'ibkr' extra to use IBKR execution") from exc
+            raise ProviderUnavailableError(
+                "Install the 'ibkr' extra to use IBKR execution"
+            ) from exc
         ib = IB()
         ib.connect(self._host, self._port, clientId=self._client_id, readonly=False, timeout=5)
         self._ib = ib
@@ -133,7 +135,9 @@ class IBKRPaperBroker(ExecutionBroker):
                     quantity=int(execution.shares),
                     price=float(execution.price),
                     commission=float(getattr(fill.commissionReport, "commission", 0) or 0),
-                    timestamp=execution.time if execution.time.tzinfo else execution.time.replace(tzinfo=timezone.utc),
+                    timestamp=execution.time
+                    if execution.time.tzinfo
+                    else execution.time.replace(tzinfo=timezone.utc),
                 )
             )
         return managed

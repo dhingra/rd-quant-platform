@@ -30,7 +30,11 @@ def test_risk_approves_valid_order():
 
 def test_risk_rejects_notional_and_kill_switch():
     request = OrderRequest("AAPL", ExecutionSide.BUY, 100, reference_price=200)
-    assert not RiskEngine().evaluate(request, account(), RiskLimits(max_order_notional=5_000), 0).approved
+    assert (
+        not RiskEngine()
+        .evaluate(request, account(), RiskLimits(max_order_notional=5_000), 0)
+        .approved
+    )
     assert not RiskEngine().evaluate(request, account(), RiskLimits(kill_switch=True), 0).approved
 
 

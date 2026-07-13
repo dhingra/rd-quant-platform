@@ -30,7 +30,10 @@ def test_scanner_filters_and_sorts():
         filters=(ScannerFilter("roc_pct", FilterOperator.GTE, 1.0),),
         sort_by="roc_pct",
     )
-    result = engine.run(definition, [snapshot("AAPL", 0.02, 1.2), snapshot("MSFT", 0.01, 2.0), snapshot("NVDA", -0.01, 3.0)])
+    result = engine.run(
+        definition,
+        [snapshot("AAPL", 0.02, 1.2), snapshot("MSFT", 0.01, 2.0), snapshot("NVDA", -0.01, 3.0)],
+    )
     assert [match.symbol for match in result.matches] == ["AAPL", "MSFT"]
     assert result.evaluated_count == 3
     assert result.elapsed_ms >= 0
@@ -42,5 +45,7 @@ def test_boolean_scanner_filter():
         name="above vwap",
         filters=(ScannerFilter("above_vwap", FilterOperator.IS_TRUE),),
     )
-    result = engine.run(definition, [snapshot("AAPL", 0.01, 1.0, 100), snapshot("MSFT", 0.01, 1.0, 98)])
+    result = engine.run(
+        definition, [snapshot("AAPL", 0.01, 1.0, 100), snapshot("MSFT", 0.01, 1.0, 98)]
+    )
     assert [match.symbol for match in result.matches] == ["AAPL"]

@@ -6,7 +6,10 @@ from rdqp.scanners.domain.models import ScanDefinition, ScanMatch, ScanResult
 
 def result(symbols):
     definition = ScanDefinition(name="Momentum", filters=())
-    matches = tuple(ScanMatch(symbol=s, timestamp=datetime.now(timezone.utc), values={"symbol": s}) for s in symbols)
+    matches = tuple(
+        ScanMatch(symbol=s, timestamp=datetime.now(timezone.utc), values={"symbol": s})
+        for s in symbols
+    )
     return ScanResult(definition, matches, len(matches), 0.1, datetime.now(timezone.utc))
 
 

@@ -6,10 +6,20 @@ from rdqp.strategies import RuleOperator, StrategyRule, evaluate_rule
 
 def snap(**overrides):
     values = dict(
-        symbol="AAPL", timestamp=datetime.now(timezone.utc), price=101.0, volume=1000,
-        sector="Technology", roc=0.012, rvol=2.0, vwap=100.0, vwap_distance=0.01,
-        gap=0.02, opening_range_high=100.5, opening_range_low=99.0,
-        opening_range_state="breakout", rank=1,
+        symbol="AAPL",
+        timestamp=datetime.now(timezone.utc),
+        price=101.0,
+        volume=1000,
+        sector="Technology",
+        roc=0.012,
+        rvol=2.0,
+        vwap=100.0,
+        vwap_distance=0.01,
+        gap=0.02,
+        opening_range_high=100.5,
+        opening_range_low=99.0,
+        opening_range_state="breakout",
+        rank=1,
     )
     values.update(overrides)
     return FactorSnapshot(**values)

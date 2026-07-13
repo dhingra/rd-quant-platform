@@ -25,8 +25,13 @@ from rdqp.scanners import FilterOperator, ScanDefinition, ScannerFilter, default
 from rdqp.scanners.infrastructure.yaml_repository import YamlScanRepository
 from rdqp.portfolio import PaperPortfolio
 from rdqp.execution import (
-    ExecutionOrderType, ExecutionSide, IBKRPaperBroker, OrderManager, OrderRequest,
-    PaperExecutionBroker, SQLiteTradeJournal,
+    ExecutionOrderType,
+    ExecutionSide,
+    IBKRPaperBroker,
+    OrderManager,
+    OrderRequest,
+    PaperExecutionBroker,
+    SQLiteTradeJournal,
 )
 from rdqp.risk import RiskLimits
 from rdqp.strategies import BacktestEngine, RuleOperator, StrategyDefinition, StrategyRule
@@ -39,17 +44,27 @@ from rdqp.research.application.monte_carlo import MonteCarloEngine
 from rdqp.research.application.optimizer import GridSearchOptimizer
 from rdqp.research.application.walk_forward import WalkForwardEngine
 from rdqp.research.domain.models import (
-    OptimizationObjective, ParameterRange, ResearchExperiment,
+    OptimizationObjective,
+    ParameterRange,
+    ResearchExperiment,
 )
 from rdqp.research.infrastructure.sqlite_repository import SqliteExperimentRepository
 from rdqp.replay import CsvTickStore, ReplayEngine
 from rdqp.observability import HealthMonitor, HealthStatus, MetricsRegistry
 from rdqp.automation import (
-    AutomationConfig, AutomationMode, AutomationRunner, JsonlAutomationJournal,
-    AutomationScheduler, MarketSessionPolicy, SchedulerConfig, SQLiteAutomationStateStore,
+    AutomationConfig,
+    AutomationMode,
+    AutomationRunner,
+    JsonlAutomationJournal,
+    AutomationScheduler,
+    MarketSessionPolicy,
+    SchedulerConfig,
+    SQLiteAutomationStateStore,
 )
 from rdqp.notifications import (
-    InMemoryNotificationSink, JsonlNotificationSink, NotificationRouter,
+    InMemoryNotificationSink,
+    JsonlNotificationSink,
+    NotificationRouter,
 )
 
 st.set_page_config(page_title="RD Quant Platform", page_icon="📈", layout="wide")
@@ -57,7 +72,11 @@ settings = load_settings(ROOT / "config/app.yaml")
 
 
 def parse_symbols(raw: str) -> list[str]:
-    return list(dict.fromkeys(part.strip().upper() for part in raw.replace("\n", ",").split(",") if part.strip()))
+    return list(
+        dict.fromkeys(
+            part.strip().upper() for part in raw.replace("\n", ",").split(",") if part.strip()
+        )
+    )
 
 
 def as_frame(records) -> pd.DataFrame:
@@ -93,7 +112,9 @@ with st.sidebar:
     lookback = st.slider("ROC lookback seconds", 60, 900, settings.analytics.roc_window_seconds, 30)
     leaderboard_size = st.slider("Leaderboard size", 5, 50, 10)
     simulator_steps = st.slider("Simulator steps per refresh", 1, 30, 5)
-    st.caption("Yahoo supplies delayed 1-minute bars. IBKR uses a read-only paper snapshot connection.")
+    st.caption(
+        "Yahoo supplies delayed 1-minute bars. IBKR uses a read-only paper snapshot connection."
+    )
 
 key = controller_key(source, symbols, lookback)
 if st.session_state.get("dashboard_key") != key:
@@ -110,7 +131,9 @@ def refresh() -> None:
     if source == "Simulator":
         controller.simulator_refresh(simulator_steps)
     elif source == "Yahoo Finance":
-        ticks = fetch_latest_ticks(symbols, settings.market_data.yahoo.period, settings.market_data.yahoo.interval)
+        ticks = fetch_latest_ticks(
+            symbols, settings.market_data.yahoo.period, settings.market_data.yahoo.interval
+        )
         controller.ingest(ticks)
     else:
         ib = settings.market_data.ibkr
@@ -139,18 +162,51 @@ stats = controller.statistics()
 
 metric_cols = st.columns(6)
 metric_cols[0].metric("Symbols ranked", stats.count)
-metric_cols[1].metric("Mean ROC", "n/a" if stats.mean_roc is None else f"{stats.mean_roc * 100:+.3f}%")
-metric_cols[2].metric("Median ROC", "n/a" if stats.median_roc is None else f"{stats.median_roc * 100:+.3f}%")
-metric_cols[3].metric("Std dev", "n/a" if stats.standard_deviation is None else f"{stats.standard_deviation * 100:.3f}%")
+metric_cols[1].metric(
+    "Mean ROC", "n/a" if stats.mean_roc is None else f"{stats.mean_roc * 100:+.3f}%"
+)
+metric_cols[2].metric(
+    "Median ROC", "n/a" if stats.median_roc is None else f"{stats.median_roc * 100:+.3f}%"
+)
+metric_cols[3].metric(
+    "Std dev",
+    "n/a" if stats.standard_deviation is None else f"{stats.standard_deviation * 100:.3f}%",
+)
 metric_cols[4].metric("Skew", "n/a" if stats.skew is None else f"{stats.skew:+.2f}")
-metric_cols[5].metric("Positive", "n/a" if stats.positive_percentage is None else f"{stats.positive_percentage:.0%}")
+metric_cols[5].metric(
+    "Positive", "n/a" if stats.positive_percentage is None else f"{stats.positive_percentage:.0%}"
+)
 
-page = st.segmented_control("View", ["Leaderboard", "Scanner", "Strategy Lab", "Research Lab", "Execution", "Automation", "Scheduler & Alerts", "Market", "Replay & Ops", "Architecture"], default="Leaderboard")
+page = st.segmented_control(
+    "View",
+    [
+        "Leaderboard",
+        "Scanner",
+        "Strategy Lab",
+        "Research Lab",
+        "Execution",
+        "Automation",
+        "Scheduler & Alerts",
+        "Market",
+        "Replay & Ops",
+        "Architecture",
+    ],
+    default="Leaderboard",
+)
 
 if page == "Leaderboard":
     st.subheader("Live cross-sectional momentum")
     left, right = st.columns(2)
-    display_cols = ["rank", "symbol", "sector", "price", "roc_pct", "rvol", "vwap_distance_pct", "orb"]
+    display_cols = [
+        "rank",
+        "symbol",
+        "sector",
+        "price",
+        "roc_pct",
+        "rvol",
+        "vwap_distance_pct",
+        "orb",
+    ]
     with left:
         st.markdown("#### Leaders")
         leaders = df.head(leaderboard_size)[display_cols] if not df.empty else df
@@ -169,10 +225,14 @@ if page == "Leaderboard":
             },
         )
         if leader_event.selection.rows:
-            st.session_state.selected_symbol = leaders.iloc[leader_event.selection.rows[0]]["symbol"]
+            st.session_state.selected_symbol = leaders.iloc[leader_event.selection.rows[0]][
+                "symbol"
+            ]
     with right:
         st.markdown("#### Laggards")
-        laggards = df.tail(leaderboard_size).sort_values("roc_pct")[display_cols] if not df.empty else df
+        laggards = (
+            df.tail(leaderboard_size).sort_values("roc_pct")[display_cols] if not df.empty else df
+        )
         laggard_event = st.dataframe(
             laggards,
             use_container_width=True,
@@ -188,7 +248,9 @@ if page == "Leaderboard":
             },
         )
         if laggard_event.selection.rows:
-            st.session_state.selected_symbol = laggards.iloc[laggard_event.selection.rows[0]]["symbol"]
+            st.session_state.selected_symbol = laggards.iloc[laggard_event.selection.rows[0]][
+                "symbol"
+            ]
 
     chart_left, chart_right = st.columns(2)
     valid = df.dropna(subset=["roc_pct"]) if not df.empty else df
@@ -197,17 +259,24 @@ if page == "Leaderboard":
         if valid.empty:
             st.info("ROC needs enough event-time history for the selected lookback.")
         else:
-            fig = px.histogram(valid, x="roc_pct", nbins=min(20, max(5, len(valid))), hover_data=["symbol"])
+            fig = px.histogram(
+                valid, x="roc_pct", nbins=min(20, max(5, len(valid))), hover_data=["symbol"]
+            )
             fig.add_vline(x=0, line_dash="dash")
             fig.update_layout(xaxis_title="ROC %", yaxis_title="Symbols", height=340)
             st.plotly_chart(fig, use_container_width=True)
     with chart_right:
         st.markdown("#### Momentum breadth")
         positive = stats.positive_percentage * 100 if stats.positive_percentage is not None else 0
-        gauge = go.Figure(go.Indicator(
-            mode="gauge+number", value=positive, number={"suffix": "%"},
-            title={"text": "Symbols with positive ROC"}, gauge={"axis": {"range": [0, 100]}},
-        ))
+        gauge = go.Figure(
+            go.Indicator(
+                mode="gauge+number",
+                value=positive,
+                number={"suffix": "%"},
+                title={"text": "Symbols with positive ROC"},
+                gauge={"axis": {"range": [0, 100]}},
+            )
+        )
         gauge.update_layout(height=340, margin=dict(l=30, r=30, t=70, b=20))
         st.plotly_chart(gauge, use_container_width=True)
 
@@ -218,24 +287,35 @@ if page == "Leaderboard":
         selected_row = df[df.symbol == selected].iloc[0]
         cards = st.columns(6)
         cards[0].metric("Last", f"${selected_row.price:,.2f}")
-        cards[1].metric("ROC", "n/a" if pd.isna(selected_row.roc_pct) else f"{selected_row.roc_pct:+.3f}%")
+        cards[1].metric(
+            "ROC", "n/a" if pd.isna(selected_row.roc_pct) else f"{selected_row.roc_pct:+.3f}%"
+        )
         cards[2].metric("Rank", int(selected_row["rank"]))
         cards[3].metric("RVOL", "n/a" if pd.isna(selected_row.rvol) else f"{selected_row.rvol:.2f}")
-        cards[4].metric("VWAP distance", "n/a" if pd.isna(selected_row.vwap_distance_pct) else f"{selected_row.vwap_distance_pct:+.3f}%")
+        cards[4].metric(
+            "VWAP distance",
+            "n/a"
+            if pd.isna(selected_row.vwap_distance_pct)
+            else f"{selected_row.vwap_distance_pct:+.3f}%",
+        )
         cards[5].metric("ORB", selected_row.orb)
 
         history = controller.symbol_history(selected)
-        history_df = pd.DataFrame({
-            "datetime": [r.timestamp for r in history],
-            "price": [r.price for r in history],
-            "roc_pct": [None if r.roc is None else r.roc * 100 for r in history],
-            "vwap": [r.vwap for r in history],
-            "volume": [r.volume for r in history],
-        })
+        history_df = pd.DataFrame(
+            {
+                "datetime": [r.timestamp for r in history],
+                "price": [r.price for r in history],
+                "roc_pct": [None if r.roc is None else r.roc * 100 for r in history],
+                "vwap": [r.vwap for r in history],
+                "volume": [r.volume for r in history],
+            }
+        )
         price_col, roc_col = st.columns(2)
         with price_col:
             price_chart = go.Figure()
-            price_chart.add_trace(go.Scatter(x=history_df.datetime, y=history_df.price, name="Price"))
+            price_chart.add_trace(
+                go.Scatter(x=history_df.datetime, y=history_df.price, name="Price")
+            )
             price_chart.add_trace(go.Scatter(x=history_df.datetime, y=history_df.vwap, name="VWAP"))
             price_chart.update_layout(title="Price and VWAP", height=350, yaxis_title="Price")
             st.plotly_chart(price_chart, use_container_width=True)
@@ -250,7 +330,9 @@ if page == "Leaderboard":
 
 elif page == "Scanner":
     st.subheader("Configurable scanner engine")
-    st.caption("Composable filters run against the latest cross-sectional factor snapshot. Saved scans persist to data/saved_scans.yaml.")
+    st.caption(
+        "Composable filters run against the latest cross-sectional factor snapshot. Saved scans persist to data/saved_scans.yaml."
+    )
 
     if "scan_repository" not in st.session_state:
         st.session_state.scan_repository = YamlScanRepository(ROOT / "data/saved_scans.yaml")
@@ -271,32 +353,58 @@ elif page == "Scanner":
     definition = scans[selected_scan_name]
     with st.expander("Scanner definition", expanded=False):
         st.write(definition.description or "No description")
-        st.json({
-            "sort_by": definition.sort_by,
-            "descending": definition.descending,
-            "limit": definition.limit,
-            "filters": [
-                {"field": f.field, "operator": f.operator.value, "value": f.value, "second_value": f.second_value}
-                for f in definition.filters
-            ],
-        })
+        st.json(
+            {
+                "sort_by": definition.sort_by,
+                "descending": definition.descending,
+                "limit": definition.limit,
+                "filters": [
+                    {
+                        "field": f.field,
+                        "operator": f.operator.value,
+                        "value": f.value,
+                        "second_value": f.second_value,
+                    }
+                    for f in definition.filters
+                ],
+            }
+        )
 
     result = controller.run_scan(definition)
     if alerts_enabled:
         new_alerts = controller.evaluate_alerts(result)
-        st.session_state.scanner_alert_log = list(new_alerts) + st.session_state.scanner_alert_log[:99]
+        st.session_state.scanner_alert_log = (
+            list(new_alerts) + st.session_state.scanner_alert_log[:99]
+        )
 
     summary_cols = st.columns(4)
     summary_cols[0].metric("Matches", len(result.matches))
     summary_cols[1].metric("Universe", result.evaluated_count)
-    summary_cols[2].metric("Match rate", f"{len(result.matches) / max(1, result.evaluated_count):.1%}")
+    summary_cols[2].metric(
+        "Match rate", f"{len(result.matches) / max(1, result.evaluated_count):.1%}"
+    )
     summary_cols[3].metric("Scan latency", f"{result.elapsed_ms:.3f} ms")
 
     match_df = pd.DataFrame([match.values for match in result.matches])
     if match_df.empty:
         st.info("No symbols currently satisfy this scan.")
     else:
-        visible = [c for c in ["rank", "symbol", "sector", "price", "roc_pct", "rvol", "gap_pct", "vwap_distance_pct", "opening_range_state", "volume"] if c in match_df.columns]
+        visible = [
+            c
+            for c in [
+                "rank",
+                "symbol",
+                "sector",
+                "price",
+                "roc_pct",
+                "rvol",
+                "gap_pct",
+                "vwap_distance_pct",
+                "opening_range_state",
+                "volume",
+            ]
+            if c in match_df.columns
+        ]
         scan_event = st.dataframe(
             match_df[visible],
             use_container_width=True,
@@ -308,14 +416,18 @@ elif page == "Scanner":
                 "price": st.column_config.NumberColumn(format="$%.2f"),
                 "roc_pct": st.column_config.NumberColumn("ROC %", format="%+.3f%%"),
                 "gap_pct": st.column_config.NumberColumn("Gap %", format="%+.2f%%"),
-                "vwap_distance_pct": st.column_config.NumberColumn("VWAP distance %", format="%+.3f%%"),
+                "vwap_distance_pct": st.column_config.NumberColumn(
+                    "VWAP distance %", format="%+.3f%%"
+                ),
                 "rvol": st.column_config.NumberColumn(format="%.2f"),
             },
         )
         if scan_event.selection.rows:
             selected_index = scan_event.selection.rows[0]
             st.session_state.selected_symbol = str(match_df.iloc[selected_index]["symbol"])
-            st.success(f"Selected {st.session_state.selected_symbol}. Open Leaderboard to inspect its charts.")
+            st.success(
+                f"Selected {st.session_state.selected_symbol}. Open Leaderboard to inspect its charts."
+            )
 
     st.divider()
     builder, alert_panel = st.columns([3, 2])
@@ -324,11 +436,37 @@ elif page == "Scanner":
         with st.form("custom_scan_form"):
             custom_name = st.text_input("Name", value="My Momentum Scan")
             custom_description = st.text_input("Description", value="Custom cross-sectional filter")
-            field_options = ["roc_pct", "rvol", "gap_pct", "vwap_distance_pct", "price", "volume", "rank", "sector", "above_vwap", "orb_breakout", "orb_breakdown"]
+            field_options = [
+                "roc_pct",
+                "rvol",
+                "gap_pct",
+                "vwap_distance_pct",
+                "price",
+                "volume",
+                "rank",
+                "sector",
+                "above_vwap",
+                "orb_breakout",
+                "orb_breakdown",
+            ]
             c1, c2, c3 = st.columns(3)
             custom_field = c1.selectbox("Field", field_options)
             boolean_field = custom_field in {"above_vwap", "orb_breakout", "orb_breakdown"}
-            operators = [FilterOperator.IS_TRUE.value, FilterOperator.IS_FALSE.value] if boolean_field else [op.value for op in [FilterOperator.GTE, FilterOperator.GT, FilterOperator.LTE, FilterOperator.LT, FilterOperator.EQ, FilterOperator.NE]]
+            operators = (
+                [FilterOperator.IS_TRUE.value, FilterOperator.IS_FALSE.value]
+                if boolean_field
+                else [
+                    op.value
+                    for op in [
+                        FilterOperator.GTE,
+                        FilterOperator.GT,
+                        FilterOperator.LTE,
+                        FilterOperator.LT,
+                        FilterOperator.EQ,
+                        FilterOperator.NE,
+                    ]
+                ]
+            )
             custom_operator = c2.selectbox("Operator", operators)
             if custom_field == "sector":
                 custom_value = c3.text_input("Value", value="Technology")
@@ -337,7 +475,15 @@ elif page == "Scanner":
                 c3.write("Boolean filter")
             else:
                 custom_value = c3.number_input("Value", value=0.0, step=0.1, format="%.4f")
-            sort_options = ["roc_pct", "rvol", "gap_pct", "vwap_distance_pct", "price", "volume", "rank"]
+            sort_options = [
+                "roc_pct",
+                "rvol",
+                "gap_pct",
+                "vwap_distance_pct",
+                "price",
+                "volume",
+                "rank",
+            ]
             s1, s2, s3 = st.columns(3)
             sort_by = s1.selectbox("Sort by", sort_options)
             descending = s2.toggle("Descending", value=True)
@@ -347,7 +493,9 @@ elif page == "Scanner":
             new_definition = ScanDefinition(
                 name=custom_name.strip(),
                 description=custom_description.strip(),
-                filters=(ScannerFilter(custom_field, FilterOperator(custom_operator), custom_value),),
+                filters=(
+                    ScannerFilter(custom_field, FilterOperator(custom_operator), custom_value),
+                ),
                 sort_by=sort_by,
                 descending=descending,
                 limit=int(scan_limit),
@@ -357,7 +505,9 @@ elif page == "Scanner":
             st.rerun()
 
         if saved:
-            delete_name = st.selectbox("Delete saved scan", ["—"] + sorted(saved), key="delete_scan_name")
+            delete_name = st.selectbox(
+                "Delete saved scan", ["—"] + sorted(saved), key="delete_scan_name"
+            )
             if st.button("Delete selected scan", disabled=delete_name == "—"):
                 repository.delete(delete_name)
                 st.success(f"Deleted scan: {delete_name}")
@@ -375,19 +525,43 @@ elif page == "Scanner":
 
 elif page == "Strategy Lab":
     st.subheader("Strategy Lab")
-    st.caption("Build factor rules, backtest them against the current event-time history, and place simulated orders in an isolated paper portfolio.")
+    st.caption(
+        "Build factor rules, backtest them against the current event-time history, and place simulated orders in an isolated paper portfolio."
+    )
 
     if "strategy_repository" not in st.session_state:
-        st.session_state.strategy_repository = YamlStrategyRepository(ROOT / "data/saved_strategies.yaml")
+        st.session_state.strategy_repository = YamlStrategyRepository(
+            ROOT / "data/saved_strategies.yaml"
+        )
     if "paper_portfolio" not in st.session_state:
         st.session_state.paper_portfolio = PaperPortfolio(100_000.0)
     repository = st.session_state.strategy_repository
     portfolio: PaperPortfolio = st.session_state.paper_portfolio
 
-    field_options = ["roc_pct", "rvol", "vwap_distance_pct", "gap_pct", "price", "volume", "rank", "above_vwap", "orb_breakout", "orb_breakdown"]
-    numeric_operators = [RuleOperator.GT.value, RuleOperator.GTE.value, RuleOperator.LT.value, RuleOperator.LTE.value, RuleOperator.EQ.value, RuleOperator.NE.value]
+    field_options = [
+        "roc_pct",
+        "rvol",
+        "vwap_distance_pct",
+        "gap_pct",
+        "price",
+        "volume",
+        "rank",
+        "above_vwap",
+        "orb_breakout",
+        "orb_breakdown",
+    ]
+    numeric_operators = [
+        RuleOperator.GT.value,
+        RuleOperator.GTE.value,
+        RuleOperator.LT.value,
+        RuleOperator.LTE.value,
+        RuleOperator.EQ.value,
+        RuleOperator.NE.value,
+    ]
 
-    builder_tab, results_tab, paper_tab = st.tabs(["Visual builder", "Backtest results", "Paper portfolio"])
+    builder_tab, results_tab, paper_tab = st.tabs(
+        ["Visual builder", "Backtest results", "Paper portfolio"]
+    )
     with builder_tab:
         saved_strategies = {item.name: item for item in repository.list()}
         if saved_strategies:
@@ -397,54 +571,151 @@ elif page == "Strategy Lab":
         loaded = saved_strategies.get(loaded_name)
 
         with st.form("strategy_builder"):
-            strategy_name = st.text_input("Strategy name", value=loaded.name if loaded else "Momentum + VWAP")
-            description = st.text_input("Description", value=loaded.description if loaded else "Long when momentum and price location agree")
+            strategy_name = st.text_input(
+                "Strategy name", value=loaded.name if loaded else "Momentum + VWAP"
+            )
+            description = st.text_input(
+                "Description",
+                value=loaded.description
+                if loaded
+                else "Long when momentum and price location agree",
+            )
             st.markdown("#### Entry rules (all must pass)")
             entry_rules = []
-            default_entries = loaded.entry_rules if loaded else (
-                StrategyRule("roc_pct", RuleOperator.GT, 0.10),
-                StrategyRule("above_vwap", RuleOperator.IS_TRUE, True),
+            default_entries = (
+                loaded.entry_rules
+                if loaded
+                else (
+                    StrategyRule("roc_pct", RuleOperator.GT, 0.10),
+                    StrategyRule("above_vwap", RuleOperator.IS_TRUE, True),
+                )
             )
-            entry_count = st.number_input("Number of entry rules", 1, 3, min(3, max(1, len(default_entries))))
+            entry_count = st.number_input(
+                "Number of entry rules", 1, 3, min(3, max(1, len(default_entries)))
+            )
             for i in range(int(entry_count)):
-                default_rule = default_entries[i] if i < len(default_entries) else StrategyRule("rvol", RuleOperator.GT, 1.0)
+                default_rule = (
+                    default_entries[i]
+                    if i < len(default_entries)
+                    else StrategyRule("rvol", RuleOperator.GT, 1.0)
+                )
                 c1, c2, c3 = st.columns(3)
-                field = c1.selectbox("Field", field_options, index=field_options.index(default_rule.field), key=f"entry_field_{i}")
+                field = c1.selectbox(
+                    "Field",
+                    field_options,
+                    index=field_options.index(default_rule.field),
+                    key=f"entry_field_{i}",
+                )
                 is_bool = field in {"above_vwap", "orb_breakout", "orb_breakdown"}
-                allowed_ops = [RuleOperator.IS_TRUE.value, RuleOperator.IS_FALSE.value] if is_bool else numeric_operators
-                default_op = default_rule.operator.value if default_rule.operator.value in allowed_ops else allowed_ops[0]
-                operator = c2.selectbox("Operator", allowed_ops, index=allowed_ops.index(default_op), key=f"entry_op_{i}")
+                allowed_ops = (
+                    [RuleOperator.IS_TRUE.value, RuleOperator.IS_FALSE.value]
+                    if is_bool
+                    else numeric_operators
+                )
+                default_op = (
+                    default_rule.operator.value
+                    if default_rule.operator.value in allowed_ops
+                    else allowed_ops[0]
+                )
+                operator = c2.selectbox(
+                    "Operator",
+                    allowed_ops,
+                    index=allowed_ops.index(default_op),
+                    key=f"entry_op_{i}",
+                )
                 if is_bool:
                     c3.caption("Boolean condition")
                     value = True
                 else:
-                    numeric_default = float(default_rule.value) if isinstance(default_rule.value, (int, float)) else 0.0
-                    value = c3.number_input("Value", value=numeric_default, step=0.1, format="%.4f", key=f"entry_value_{i}")
+                    numeric_default = (
+                        float(default_rule.value)
+                        if isinstance(default_rule.value, (int, float))
+                        else 0.0
+                    )
+                    value = c3.number_input(
+                        "Value",
+                        value=numeric_default,
+                        step=0.1,
+                        format="%.4f",
+                        key=f"entry_value_{i}",
+                    )
                 entry_rules.append(StrategyRule(field, RuleOperator(operator), value))
 
             st.markdown("#### Exit rule")
             use_exit = st.toggle("Use factor exit rule", value=bool(loaded and loaded.exit_rules))
             exit_rules = []
             if use_exit:
-                default_exit = loaded.exit_rules[0] if loaded and loaded.exit_rules else StrategyRule("roc_pct", RuleOperator.LT, 0.0)
+                default_exit = (
+                    loaded.exit_rules[0]
+                    if loaded and loaded.exit_rules
+                    else StrategyRule("roc_pct", RuleOperator.LT, 0.0)
+                )
                 e1, e2, e3 = st.columns(3)
-                exit_field = e1.selectbox("Exit field", field_options, index=field_options.index(default_exit.field))
+                exit_field = e1.selectbox(
+                    "Exit field", field_options, index=field_options.index(default_exit.field)
+                )
                 exit_bool = exit_field in {"above_vwap", "orb_breakout", "orb_breakdown"}
-                exit_ops = [RuleOperator.IS_TRUE.value, RuleOperator.IS_FALSE.value] if exit_bool else numeric_operators
-                exit_operator = e2.selectbox("Exit operator", exit_ops, index=exit_ops.index(default_exit.operator.value) if default_exit.operator.value in exit_ops else 0)
+                exit_ops = (
+                    [RuleOperator.IS_TRUE.value, RuleOperator.IS_FALSE.value]
+                    if exit_bool
+                    else numeric_operators
+                )
+                exit_operator = e2.selectbox(
+                    "Exit operator",
+                    exit_ops,
+                    index=exit_ops.index(default_exit.operator.value)
+                    if default_exit.operator.value in exit_ops
+                    else 0,
+                )
                 if exit_bool:
                     e3.caption("Boolean condition")
                     exit_value = True
                 else:
-                    exit_value = e3.number_input("Exit value", value=float(default_exit.value or 0), step=0.1, format="%.4f")
+                    exit_value = e3.number_input(
+                        "Exit value", value=float(default_exit.value or 0), step=0.1, format="%.4f"
+                    )
                 exit_rules.append(StrategyRule(exit_field, RuleOperator(exit_operator), exit_value))
 
             p1, p2, p3, p4 = st.columns(4)
-            initial_capital = p1.number_input("Initial capital", min_value=1_000.0, value=float(loaded.initial_capital if loaded else 100_000), step=5_000.0)
-            allocation_pct = p2.slider("Allocation per position", 1, 100, int((loaded.allocation_pct if loaded else 0.10) * 100)) / 100
-            stop_loss = p3.number_input("Stop loss % (0=off)", min_value=0.0, value=float((loaded.stop_loss_pct or 0) * 100 if loaded else 2.0), step=0.25) / 100
-            take_profit = p4.number_input("Take profit % (0=off)", min_value=0.0, value=float((loaded.take_profit_pct or 0) * 100 if loaded else 4.0), step=0.25) / 100
-            commission = st.number_input("Commission per side", min_value=0.0, value=float(loaded.commission_per_trade if loaded else 0.0), step=0.25)
+            initial_capital = p1.number_input(
+                "Initial capital",
+                min_value=1_000.0,
+                value=float(loaded.initial_capital if loaded else 100_000),
+                step=5_000.0,
+            )
+            allocation_pct = (
+                p2.slider(
+                    "Allocation per position",
+                    1,
+                    100,
+                    int((loaded.allocation_pct if loaded else 0.10) * 100),
+                )
+                / 100
+            )
+            stop_loss = (
+                p3.number_input(
+                    "Stop loss % (0=off)",
+                    min_value=0.0,
+                    value=float((loaded.stop_loss_pct or 0) * 100 if loaded else 2.0),
+                    step=0.25,
+                )
+                / 100
+            )
+            take_profit = (
+                p4.number_input(
+                    "Take profit % (0=off)",
+                    min_value=0.0,
+                    value=float((loaded.take_profit_pct or 0) * 100 if loaded else 4.0),
+                    step=0.25,
+                )
+                / 100
+            )
+            commission = st.number_input(
+                "Commission per side",
+                min_value=0.0,
+                value=float(loaded.commission_per_trade if loaded else 0.0),
+                step=0.25,
+            )
             save_col, run_col = st.columns(2)
             save_clicked = save_col.form_submit_button("Save strategy")
             run_clicked = run_col.form_submit_button("Run backtest", type="primary")
@@ -464,12 +735,16 @@ elif page == "Strategy Lab":
             repository.save(definition)
             st.success(f"Saved strategy: {definition.name}")
         if run_clicked:
-            st.session_state.backtest_result = BacktestEngine().run(definition, controller.all_histories())
+            st.session_state.backtest_result = BacktestEngine().run(
+                definition, controller.all_histories()
+            )
             st.session_state.backtest_definition = definition
             st.success("Backtest complete. Open Backtest results.")
 
         if saved_strategies:
-            delete_name = st.selectbox("Delete strategy", ["—"] + sorted(saved_strategies), key="delete_strategy")
+            delete_name = st.selectbox(
+                "Delete strategy", ["—"] + sorted(saved_strategies), key="delete_strategy"
+            )
             if st.button("Delete selected strategy", disabled=delete_name == "—"):
                 repository.delete(delete_name)
                 st.rerun()
@@ -477,7 +752,9 @@ elif page == "Strategy Lab":
     with results_tab:
         result = st.session_state.get("backtest_result")
         if result is None:
-            st.info("Build a strategy and run a backtest first. Simulator mode produces the richest local history.")
+            st.info(
+                "Build a strategy and run a backtest first. Simulator mode produces the richest local history."
+            )
         else:
             metrics = result.metrics
             m = st.columns(7)
@@ -485,30 +762,63 @@ elif page == "Strategy Lab":
             m[1].metric("Total return", f"{metrics.total_return:+.2%}")
             m[2].metric("Trades", metrics.trade_count)
             m[3].metric("Win rate", f"{metrics.win_rate:.1%}")
-            m[4].metric("Profit factor", "n/a" if metrics.profit_factor is None else ("∞" if metrics.profit_factor == float("inf") else f"{metrics.profit_factor:.2f}"))
+            m[4].metric(
+                "Profit factor",
+                "n/a"
+                if metrics.profit_factor is None
+                else (
+                    "∞" if metrics.profit_factor == float("inf") else f"{metrics.profit_factor:.2f}"
+                ),
+            )
             m[5].metric("Max drawdown", f"{metrics.max_drawdown:.2%}")
-            m[6].metric("Sharpe", "n/a" if metrics.sharpe_ratio is None else f"{metrics.sharpe_ratio:.2f}")
+            m[6].metric(
+                "Sharpe", "n/a" if metrics.sharpe_ratio is None else f"{metrics.sharpe_ratio:.2f}"
+            )
             if result.warnings:
                 for warning in result.warnings:
                     st.warning(warning)
-            equity_df = pd.DataFrame([{"datetime": point.timestamp, "equity": point.equity} for point in result.equity_curve])
+            equity_df = pd.DataFrame(
+                [
+                    {"datetime": point.timestamp, "equity": point.equity}
+                    for point in result.equity_curve
+                ]
+            )
             if not equity_df.empty:
-                st.plotly_chart(px.line(equity_df, x="datetime", y="equity", title="Equity curve"), use_container_width=True)
-            trades_df = pd.DataFrame([{
-                "symbol": trade.symbol, "entry_time": trade.entry_time, "exit_time": trade.exit_time,
-                "entry_price": trade.entry_price, "exit_price": trade.exit_price, "quantity": trade.quantity,
-                "pnl": trade.pnl, "return_pct": trade.return_pct * 100, "exit_reason": trade.exit_reason,
-            } for trade in result.trades])
+                st.plotly_chart(
+                    px.line(equity_df, x="datetime", y="equity", title="Equity curve"),
+                    use_container_width=True,
+                )
+            trades_df = pd.DataFrame(
+                [
+                    {
+                        "symbol": trade.symbol,
+                        "entry_time": trade.entry_time,
+                        "exit_time": trade.exit_time,
+                        "entry_price": trade.entry_price,
+                        "exit_price": trade.exit_price,
+                        "quantity": trade.quantity,
+                        "pnl": trade.pnl,
+                        "return_pct": trade.return_pct * 100,
+                        "exit_reason": trade.exit_reason,
+                    }
+                    for trade in result.trades
+                ]
+            )
             st.markdown("#### Trade list")
             if trades_df.empty:
                 st.info("No entries were generated by these rules over the loaded history.")
             else:
-                st.dataframe(trades_df, use_container_width=True, hide_index=True, column_config={
-                    "entry_price": st.column_config.NumberColumn(format="$%.2f"),
-                    "exit_price": st.column_config.NumberColumn(format="$%.2f"),
-                    "pnl": st.column_config.NumberColumn(format="$%.2f"),
-                    "return_pct": st.column_config.NumberColumn("Return %", format="%+.2f%%"),
-                })
+                st.dataframe(
+                    trades_df,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "entry_price": st.column_config.NumberColumn(format="$%.2f"),
+                        "exit_price": st.column_config.NumberColumn(format="$%.2f"),
+                        "pnl": st.column_config.NumberColumn(format="$%.2f"),
+                        "return_pct": st.column_config.NumberColumn("Return %", format="%+.2f%%"),
+                    },
+                )
 
     with paper_tab:
         prices = {record.symbol: record.price for record in records}
@@ -522,7 +832,13 @@ elif page == "Strategy Lab":
         pc[4].metric("Unrealized P&L", f"${snap.unrealized_pnl:+,.2f}")
         if records:
             trade_symbols = [record.symbol for record in records]
-            selected_trade_symbol = st.selectbox("Symbol", trade_symbols, index=trade_symbols.index(st.session_state.selected_symbol) if st.session_state.get("selected_symbol") in trade_symbols else 0)
+            selected_trade_symbol = st.selectbox(
+                "Symbol",
+                trade_symbols,
+                index=trade_symbols.index(st.session_state.selected_symbol)
+                if st.session_state.get("selected_symbol") in trade_symbols
+                else 0,
+            )
             selected_price = prices[selected_trade_symbol]
             o1, o2, o3, o4 = st.columns(4)
             side = o1.selectbox("Side", ["BUY", "SELL"])
@@ -535,26 +851,47 @@ elif page == "Strategy Lab":
                         portfolio.buy(selected_trade_symbol, quantity, selected_price, note)
                     else:
                         portfolio.sell(selected_trade_symbol, quantity, selected_price, note)
-                    st.success(f"Paper {side} filled: {quantity} {selected_trade_symbol} @ ${selected_price:.2f}")
+                    st.success(
+                        f"Paper {side} filled: {quantity} {selected_trade_symbol} @ ${selected_price:.2f}"
+                    )
                     st.rerun()
                 except ValueError as exc:
                     st.error(str(exc))
         else:
             st.info("Refresh market data before placing paper orders.")
 
-        positions_df = pd.DataFrame([{
-            "symbol": item.symbol, "quantity": item.quantity, "average_price": item.average_price,
-            "last_price": item.last_price, "market_value": item.market_value, "unrealized_pnl": item.unrealized_pnl,
-        } for item in snap.positions])
+        positions_df = pd.DataFrame(
+            [
+                {
+                    "symbol": item.symbol,
+                    "quantity": item.quantity,
+                    "average_price": item.average_price,
+                    "last_price": item.last_price,
+                    "market_value": item.market_value,
+                    "unrealized_pnl": item.unrealized_pnl,
+                }
+                for item in snap.positions
+            ]
+        )
         st.markdown("#### Positions")
         if positions_df.empty:
             st.caption("No paper positions.")
         else:
             st.dataframe(positions_df, use_container_width=True, hide_index=True)
-        journal_df = pd.DataFrame([{
-            "timestamp": item.timestamp, "symbol": item.symbol, "side": item.side.value,
-            "quantity": item.quantity, "price": item.price, "realized_pnl": item.realized_pnl, "note": item.note,
-        } for item in reversed(snap.journal)])
+        journal_df = pd.DataFrame(
+            [
+                {
+                    "timestamp": item.timestamp,
+                    "symbol": item.symbol,
+                    "side": item.side.value,
+                    "quantity": item.quantity,
+                    "price": item.price,
+                    "realized_pnl": item.realized_pnl,
+                    "note": item.note,
+                }
+                for item in reversed(snap.journal)
+            ]
+        )
         st.markdown("#### Trade journal")
         if journal_df.empty:
             st.caption("No paper trades.")
@@ -564,17 +901,25 @@ elif page == "Strategy Lab":
 
 elif page == "Research Lab":
     st.subheader("Research & Optimization Lab")
-    st.caption("Run deterministic grid searches, walk-forward validation, Monte Carlo analysis, and save reproducible experiments.")
+    st.caption(
+        "Run deterministic grid searches, walk-forward validation, Monte Carlo analysis, and save reproducible experiments."
+    )
 
     if "strategy_repository" not in st.session_state:
-        st.session_state.strategy_repository = YamlStrategyRepository(ROOT / "data/saved_strategies.yaml")
+        st.session_state.strategy_repository = YamlStrategyRepository(
+            ROOT / "data/saved_strategies.yaml"
+        )
     research_repository = SqliteExperimentRepository(ROOT / "data/research_experiments.sqlite3")
-    saved_research_strategies = {item.name: item for item in st.session_state.strategy_repository.list()}
+    saved_research_strategies = {
+        item.name: item for item in st.session_state.strategy_repository.list()
+    }
 
     if not saved_research_strategies:
         st.info("Save a strategy in Strategy Lab before using Research Lab.")
     else:
-        strategy_name = st.selectbox("Research strategy", sorted(saved_research_strategies), key="research_strategy")
+        strategy_name = st.selectbox(
+            "Research strategy", sorted(saved_research_strategies), key="research_strategy"
+        )
         research_definition = saved_research_strategies[strategy_name]
         histories = controller.all_histories()
         optimizer_tab, walk_tab, monte_tab, scorecard_tab, experiments_tab = st.tabs(
@@ -592,7 +937,9 @@ elif page == "Research Lab":
             allocation_values = st.text_input("Allocation values (%)", "5,10,20")
 
             def parse_percentages(raw: str) -> tuple[float, ...]:
-                return tuple(float(value.strip()) / 100.0 for value in raw.split(",") if value.strip())
+                return tuple(
+                    float(value.strip()) / 100.0 for value in raw.split(",") if value.strip()
+                )
 
             if st.button("Run optimization", type="primary"):
                 try:
@@ -631,8 +978,14 @@ elif page == "Research Lab":
                 r1, r2, r3, r4 = st.columns(4)
                 r1.metric("Positive trials", f"{robustness.positive_ratio:.0%}")
                 r2.metric("Stability score", robustness.stability_score)
-                r3.metric("Mean score", "n/a" if robustness.mean_score is None else f"{robustness.mean_score:.3f}")
-                r4.metric("Score dispersion", "n/a" if robustness.score_stddev is None else f"{robustness.score_stddev:.3f}")
+                r3.metric(
+                    "Mean score",
+                    "n/a" if robustness.mean_score is None else f"{robustness.mean_score:.3f}",
+                )
+                r4.metric(
+                    "Score dispersion",
+                    "n/a" if robustness.score_stddev is None else f"{robustness.score_stddev:.3f}",
+                )
                 if {"stop_loss_pct", "take_profit_pct", "score"}.issubset(trials_df.columns):
                     heatmap_df = trials_df.pivot_table(
                         index="take_profit_pct",
@@ -653,7 +1006,12 @@ elif page == "Research Lab":
                     b1, b2, b3, b4 = st.columns(4)
                     b1.metric("Best score", f"{best.score:.4f}")
                     b2.metric("Return", f"{best.result.metrics.total_return:+.2%}")
-                    b3.metric("Sharpe", "n/a" if best.result.metrics.sharpe_ratio is None else f"{best.result.metrics.sharpe_ratio:.2f}")
+                    b3.metric(
+                        "Sharpe",
+                        "n/a"
+                        if best.result.metrics.sharpe_ratio is None
+                        else f"{best.result.metrics.sharpe_ratio:.2f}",
+                    )
                     b4.metric("Max drawdown", f"{best.result.metrics.max_drawdown:.2%}")
                     notes = st.text_input("Experiment notes", key="optimization_notes")
                     if st.button("Save best experiment"):
@@ -683,7 +1041,9 @@ elif page == "Research Lab":
             folds = int(w1.number_input("Folds", min_value=1, max_value=10, value=3))
             train_fraction = w2.slider("Initial training fraction", 0.4, 0.8, 0.6, 0.05)
             wf_objective = OptimizationObjective(
-                w3.selectbox("Walk-forward objective", [item.value for item in OptimizationObjective])
+                w3.selectbox(
+                    "Walk-forward objective", [item.value for item in OptimizationObjective]
+                )
             )
             if st.button("Run walk-forward"):
                 ranges = (
@@ -761,15 +1121,19 @@ elif page == "Research Lab":
                     extended = extended_metrics(base_result)
                     st.markdown("#### Extended performance metrics")
                     st.dataframe(
-                        pd.DataFrame([{
-                            "annualized_return": extended.annualized_return,
-                            "annualized_volatility": extended.annualized_volatility,
-                            "sortino_ratio": extended.sortino_ratio,
-                            "calmar_ratio": extended.calmar_ratio,
-                            "recovery_factor": extended.recovery_factor,
-                            "payoff_ratio": extended.payoff_ratio,
-                            "average_holding_hours": extended.average_holding_hours,
-                        }]),
+                        pd.DataFrame(
+                            [
+                                {
+                                    "annualized_return": extended.annualized_return,
+                                    "annualized_volatility": extended.annualized_volatility,
+                                    "sortino_ratio": extended.sortino_ratio,
+                                    "calmar_ratio": extended.calmar_ratio,
+                                    "recovery_factor": extended.recovery_factor,
+                                    "payoff_ratio": extended.payoff_ratio,
+                                    "average_holding_hours": extended.average_holding_hours,
+                                }
+                            ]
+                        ),
                         use_container_width=True,
                         hide_index=True,
                     )
@@ -831,40 +1195,54 @@ elif page == "Research Lab":
                 st.caption("No experiments saved yet.")
             else:
                 st.dataframe(
-                    pd.DataFrame([
-                        {
-                            "id": item.id,
-                            "created_at": item.created_at,
-                            "name": item.name,
-                            "strategy": item.strategy.name,
-                            "objective": item.objective,
-                            "parameters": item.parameters,
-                            "metrics": item.metrics,
-                            "notes": item.notes,
-                        }
-                        for item in experiments
-                    ]),
+                    pd.DataFrame(
+                        [
+                            {
+                                "id": item.id,
+                                "created_at": item.created_at,
+                                "name": item.name,
+                                "strategy": item.strategy.name,
+                                "objective": item.objective,
+                                "parameters": item.parameters,
+                                "metrics": item.metrics,
+                                "notes": item.notes,
+                            }
+                            for item in experiments
+                        ]
+                    ),
                     use_container_width=True,
                     hide_index=True,
                 )
 
 elif page == "Execution":
     st.subheader("Execution Platform")
-    st.caption("Risk-gated local paper execution and explicitly armed IBKR paper trading. Live-account ports are blocked by design.")
+    st.caption(
+        "Risk-gated local paper execution and explicitly armed IBKR paper trading. Live-account ports are blocked by design."
+    )
 
     prices = {record.symbol: record.price for record in records}
     broker_mode = st.radio("Execution broker", ["Local Paper", "IBKR Paper"], horizontal=True)
 
     with st.expander("Risk controls", expanded=True):
         r1, r2, r3, r4 = st.columns(4)
-        max_order_notional = r1.number_input("Max order notional", min_value=100.0, value=10_000.0, step=500.0)
-        max_position_notional = r2.number_input("Max position notional", min_value=100.0, value=25_000.0, step=1_000.0)
-        max_daily_loss = r3.number_input("Daily loss limit", min_value=100.0, value=1_000.0, step=100.0)
+        max_order_notional = r1.number_input(
+            "Max order notional", min_value=100.0, value=10_000.0, step=500.0
+        )
+        max_position_notional = r2.number_input(
+            "Max position notional", min_value=100.0, value=25_000.0, step=1_000.0
+        )
+        max_daily_loss = r3.number_input(
+            "Daily loss limit", min_value=100.0, value=1_000.0, step=100.0
+        )
         max_open_orders = int(r4.number_input("Max open orders", min_value=0, value=10, step=1))
         r5, r6, r7 = st.columns(3)
-        max_symbol_quantity = int(r5.number_input("Max symbol quantity", min_value=1, value=1_000, step=10))
+        max_symbol_quantity = int(
+            r5.number_input("Max symbol quantity", min_value=1, value=1_000, step=10)
+        )
         allow_short = r6.toggle("Allow short selling", value=False)
-        kill_switch = r7.toggle("Kill switch", value=False, help="Reject every new order immediately")
+        kill_switch = r7.toggle(
+            "Kill switch", value=False, help="Reject every new order immediately"
+        )
     limits = RiskLimits(
         max_order_notional=float(max_order_notional),
         max_position_notional=float(max_position_notional),
@@ -890,12 +1268,23 @@ elif page == "Execution":
         manager = OrderManager(broker, journal)
         st.success("Local paper broker connected")
     else:
-        st.warning("IBKR orders can affect your paper account. Confirm TWS/IB Gateway is logged into PAPER and API access is enabled.")
+        st.warning(
+            "IBKR orders can affect your paper account. Confirm TWS/IB Gateway is logged into PAPER and API access is enabled."
+        )
         ib = settings.market_data.ibkr
         c1, c2, c3 = st.columns(3)
         host = c1.text_input("IBKR host", value=ib.host)
-        port = int(c2.number_input("Paper port", value=int(ib.port), step=1, help="TWS paper: 7497; Gateway paper: 4002"))
-        client_id = int(c3.number_input("Execution client ID", value=int(ib.client_id) + 100, step=1))
+        port = int(
+            c2.number_input(
+                "Paper port",
+                value=int(ib.port),
+                step=1,
+                help="TWS paper: 7497; Gateway paper: 4002",
+            )
+        )
+        client_id = int(
+            c3.number_input("Execution client ID", value=int(ib.client_id) + 100, step=1)
+        )
         confirm = st.text_input("Type PAPER to arm IBKR execution")
         armed = st.toggle("Arm IBKR paper order routing", value=False)
         connect_col, disconnect_col = st.columns(2)
@@ -941,18 +1330,35 @@ elif page == "Execution":
     if records and manager is not None and account is not None:
         available_symbols = [record.symbol for record in records]
         selected = st.selectbox(
-            "Order symbol", available_symbols,
-            index=available_symbols.index(st.session_state.selected_symbol) if st.session_state.get("selected_symbol") in available_symbols else 0,
+            "Order symbol",
+            available_symbols,
+            index=available_symbols.index(st.session_state.selected_symbol)
+            if st.session_state.get("selected_symbol") in available_symbols
+            else 0,
         )
         reference_price = prices[selected]
         t1, t2, t3, t4 = st.columns(4)
         order_side = ExecutionSide(t1.selectbox("Side", [item.value for item in ExecutionSide]))
-        order_type = ExecutionOrderType(t2.selectbox("Order type", [item.value for item in ExecutionOrderType]))
+        order_type = ExecutionOrderType(
+            t2.selectbox("Order type", [item.value for item in ExecutionOrderType])
+        )
         quantity = int(t3.number_input("Quantity", min_value=1, value=10, step=1))
         t4.metric("Reference price", f"${reference_price:,.2f}")
         p1, p2 = st.columns(2)
-        limit_price = p1.number_input("Limit price", min_value=0.01, value=float(reference_price), step=0.01, disabled=order_type is not ExecutionOrderType.LIMIT)
-        stop_price = p2.number_input("Stop price", min_value=0.01, value=float(reference_price), step=0.01, disabled=order_type is not ExecutionOrderType.STOP)
+        limit_price = p1.number_input(
+            "Limit price",
+            min_value=0.01,
+            value=float(reference_price),
+            step=0.01,
+            disabled=order_type is not ExecutionOrderType.LIMIT,
+        )
+        stop_price = p2.number_input(
+            "Stop price",
+            min_value=0.01,
+            value=float(reference_price),
+            step=0.01,
+            disabled=order_type is not ExecutionOrderType.STOP,
+        )
         note = st.text_input("Order note", value="Manual terminal order")
         estimated_notional = reference_price * quantity
         st.caption(f"Estimated notional: ${estimated_notional:,.2f}")
@@ -972,17 +1378,25 @@ elif page == "Execution":
             if order.status.value in {"REJECTED", "ERROR"}:
                 st.error(f"{order.status.value}: {order.message}")
             else:
-                st.success(f"{order.status.value}: {order.request.quantity} {order.request.symbol} · {order.message}")
+                st.success(
+                    f"{order.status.value}: {order.request.quantity} {order.request.symbol} · {order.message}"
+                )
                 st.rerun()
     else:
         st.info("Load market data and connect an execution broker to enable the order ticket.")
 
     if account is not None:
-        position_rows = [{
-            "symbol": p.symbol, "quantity": p.quantity, "average_cost": p.average_cost,
-            "market_price": p.market_price, "market_value": p.market_value,
-            "unrealized_pnl": p.unrealized_pnl,
-        } for p in account.positions]
+        position_rows = [
+            {
+                "symbol": p.symbol,
+                "quantity": p.quantity,
+                "average_cost": p.average_cost,
+                "market_price": p.market_price,
+                "market_value": p.market_value,
+                "unrealized_pnl": p.unrealized_pnl,
+            }
+            for p in account.positions
+        ]
         st.markdown("#### Broker positions")
         if position_rows:
             st.dataframe(pd.DataFrame(position_rows), use_container_width=True, hide_index=True)
@@ -991,22 +1405,40 @@ elif page == "Execution":
 
     st.markdown("#### Order management and audit journal")
     orders = journal.recent_orders(100)
-    order_rows = [{
-        "submitted_at": o.submitted_at, "order_id": o.order_id, "broker_order_id": o.broker_order_id,
-        "mode": o.mode.value, "symbol": o.request.symbol, "side": o.request.side.value,
-        "quantity": o.request.quantity, "type": o.request.order_type.value,
-        "status": o.status.value, "fill_price": o.average_fill_price, "message": o.message,
-    } for o in orders]
+    order_rows = [
+        {
+            "submitted_at": o.submitted_at,
+            "order_id": o.order_id,
+            "broker_order_id": o.broker_order_id,
+            "mode": o.mode.value,
+            "symbol": o.request.symbol,
+            "side": o.request.side.value,
+            "quantity": o.request.quantity,
+            "type": o.request.order_type.value,
+            "status": o.status.value,
+            "fill_price": o.average_fill_price,
+            "message": o.message,
+        }
+        for o in orders
+    ]
     if order_rows:
         st.dataframe(pd.DataFrame(order_rows), use_container_width=True, hide_index=True)
     else:
         st.caption("No execution orders have been journaled.")
     fills = journal.recent_fills(100)
-    fill_rows = [{
-        "timestamp": f.timestamp, "fill_id": f.fill_id, "order_id": f.order_id,
-        "symbol": f.symbol, "side": f.side.value, "quantity": f.quantity,
-        "price": f.price, "commission": f.commission,
-    } for f in fills]
+    fill_rows = [
+        {
+            "timestamp": f.timestamp,
+            "fill_id": f.fill_id,
+            "order_id": f.order_id,
+            "symbol": f.symbol,
+            "side": f.side.value,
+            "quantity": f.quantity,
+            "price": f.price,
+            "commission": f.commission,
+        }
+        for f in fills
+    ]
     st.markdown("#### Trade fills")
     if fill_rows:
         st.dataframe(pd.DataFrame(fill_rows), use_container_width=True, hide_index=True)
@@ -1015,7 +1447,9 @@ elif page == "Execution":
 
 elif page == "Automation":
     st.subheader("Strategy Automation")
-    st.caption("Guarded paper-only orchestration. Start in DRY_RUN; PAPER_ARMED routes only to the local paper broker in this release.")
+    st.caption(
+        "Guarded paper-only orchestration. Start in DRY_RUN; PAPER_ARMED routes only to the local paper broker in this release."
+    )
     strategy_repo = YamlStrategyRepository(ROOT / "data/saved_strategies.yaml")
     strategies = strategy_repo.list()
     if not strategies:
@@ -1026,7 +1460,9 @@ elif page == "Automation":
         names = [item.name for item in strategies]
         selected_name = st.selectbox("Saved strategy", names)
         selected_strategy = next(item for item in strategies if item.name == selected_name)
-        mode = AutomationMode(st.radio("Mode", [item.value for item in AutomationMode], horizontal=True, index=1))
+        mode = AutomationMode(
+            st.radio("Mode", [item.value for item in AutomationMode], horizontal=True, index=1)
+        )
         a1, a2, a3, a4 = st.columns(4)
         quantity = int(a1.number_input("Quantity", min_value=1, value=10, step=1))
         max_orders = int(a2.number_input("Max orders/cycle", min_value=0, value=3, step=1))
@@ -1045,8 +1481,11 @@ elif page == "Automation":
         auto_manager = OrderManager(st.session_state.automation_paper_broker, auto_journal)
         run_journal = JsonlAutomationJournal(ROOT / "data/automation_runs.jsonl")
         config = AutomationConfig(
-            mode=mode, quantity=quantity, max_orders_per_cycle=max_orders,
-            max_open_positions=max_positions, cooldown_seconds=cooldown,
+            mode=mode,
+            quantity=quantity,
+            max_orders_per_cycle=max_orders,
+            max_open_positions=max_positions,
+            cooldown_seconds=cooldown,
             require_positive_roc=positive_guard,
         )
         limits = RiskLimits()
@@ -1060,11 +1499,25 @@ elif page == "Automation":
         result = st.session_state.get("last_automation_run")
         if result is not None:
             st.markdown("#### Latest cycle")
-            st.write(f"**{result.strategy_name}** · {result.mode.value} · evaluated {result.evaluated} symbols")
-            st.dataframe(pd.DataFrame([{
-                "symbol": d.symbol, "action": d.action, "reason": d.reason,
-                "submitted": d.submitted, "order_id": d.order_id,
-            } for d in result.decisions]), use_container_width=True, hide_index=True)
+            st.write(
+                f"**{result.strategy_name}** · {result.mode.value} · evaluated {result.evaluated} symbols"
+            )
+            st.dataframe(
+                pd.DataFrame(
+                    [
+                        {
+                            "symbol": d.symbol,
+                            "action": d.action,
+                            "reason": d.reason,
+                            "submitted": d.submitted,
+                            "order_id": d.order_id,
+                        }
+                        for d in result.decisions
+                    ]
+                ),
+                use_container_width=True,
+                hide_index=True,
+            )
         st.markdown("#### Automation audit")
         recent_runs = run_journal.recent(25)
         if recent_runs:
@@ -1074,17 +1527,24 @@ elif page == "Automation":
 
 elif page == "Scheduler & Alerts":
     st.subheader("Automation Scheduler & Alert Center")
-    st.caption("Session-aware scheduling, persistent operator state, failure shutdown, and deduplicated local alerts.")
+    st.caption(
+        "Session-aware scheduling, persistent operator state, failure shutdown, and deduplicated local alerts."
+    )
 
     if "notification_memory" not in st.session_state:
         st.session_state.notification_memory = InMemoryNotificationSink()
     if "notification_router" not in st.session_state:
         st.session_state.notification_router = NotificationRouter(
-            [st.session_state.notification_memory, JsonlNotificationSink(ROOT / "data/notifications.jsonl")],
+            [
+                st.session_state.notification_memory,
+                JsonlNotificationSink(ROOT / "data/notifications.jsonl"),
+            ],
             cooldown_seconds=60,
         )
     if "automation_state_store" not in st.session_state:
-        st.session_state.automation_state_store = SQLiteAutomationStateStore(ROOT / "data/automation_state.sqlite3")
+        st.session_state.automation_state_store = SQLiteAutomationStateStore(
+            ROOT / "data/automation_state.sqlite3"
+        )
 
     state_store = st.session_state.automation_state_store
     c1, c2, c3, c4 = st.columns(4)
@@ -1112,7 +1572,13 @@ elif page == "Scheduler & Alerts":
             end_time=session_end,
         ),
     )
-    scheduler_signature = (interval, failure_limit, timezone_name, session_start.isoformat(), session_end.isoformat())
+    scheduler_signature = (
+        interval,
+        failure_limit,
+        timezone_name,
+        session_start.isoformat(),
+        session_end.isoformat(),
+    )
     if st.session_state.get("scheduler_signature") != scheduler_signature:
         st.session_state.scheduler_signature = scheduler_signature
         st.session_state.automation_scheduler = AutomationScheduler(
@@ -1150,27 +1616,40 @@ elif page == "Scheduler & Alerts":
     st.caption(f"Next run: {status.next_run_at or 'n/a'} · Last run: {status.last_run_at or 'n/a'}")
 
     st.markdown("#### Persistent operations state")
-    st.json({
-        "operator_state": state_store.get("operator_state", "NOT_SET"),
-        "cycle_counter": state_store.get("cycle_counter", 0),
-        "last_cycle_source": state_store.get("last_cycle_source"),
-        "last_cycle_symbols": state_store.get("last_cycle_symbols", []),
-    })
+    st.json(
+        {
+            "operator_state": state_store.get("operator_state", "NOT_SET"),
+            "cycle_counter": state_store.get("cycle_counter", 0),
+            "last_cycle_source": state_store.get("last_cycle_source"),
+            "last_cycle_symbols": state_store.get("last_cycle_symbols", []),
+        }
+    )
 
     st.markdown("#### Notification center")
     notifications = st.session_state.notification_memory.items
     if notifications:
-        st.dataframe(pd.DataFrame([{
-            "created_at": item.created_at,
-            "severity": item.severity.value,
-            "category": item.category,
-            "symbol": item.symbol,
-            "title": item.title,
-            "message": item.message,
-        } for item in notifications]), use_container_width=True, hide_index=True)
+        st.dataframe(
+            pd.DataFrame(
+                [
+                    {
+                        "created_at": item.created_at,
+                        "severity": item.severity.value,
+                        "category": item.category,
+                        "symbol": item.symbol,
+                        "title": item.title,
+                        "message": item.message,
+                    }
+                    for item in notifications
+                ]
+            ),
+            use_container_width=True,
+            hide_index=True,
+        )
     else:
         st.caption("No operational notifications yet.")
-    st.info("Sprint 8 scheduler is intentionally single-process and operator-driven. It does not create unattended IBKR sessions.")
+    st.info(
+        "Sprint 8 scheduler is intentionally single-process and operator-driven. It does not create unattended IBKR sessions."
+    )
 
 elif page == "Market":
     st.subheader("Market analytics")
@@ -1192,8 +1671,12 @@ elif page == "Market":
             treemap = valid.copy()
             treemap["tile_size"] = treemap["volume"].fillna(0).clip(lower=1)
             fig = px.treemap(
-                treemap, path=["sector", "symbol"], values="tile_size", color="roc_pct",
-                color_continuous_scale="RdYlGn", color_continuous_midpoint=0,
+                treemap,
+                path=["sector", "symbol"],
+                values="tile_size",
+                color="roc_pct",
+                color_continuous_scale="RdYlGn",
+                color_continuous_midpoint=0,
                 hover_data={"price": ":.2f", "roc_pct": ":+.3f", "rvol": ":.2f"},
             )
             fig.update_layout(height=520, margin=dict(l=5, r=5, t=10, b=5))
@@ -1206,8 +1689,11 @@ elif page == "Market":
         else:
             sector_df["average_roc_pct"] = sector_df.average_roc * 100
             fig = px.bar(
-                sector_df.sort_values("average_roc_pct"), x="average_roc_pct", y="sector",
-                orientation="h", hover_data=["symbols"],
+                sector_df.sort_values("average_roc_pct"),
+                x="average_roc_pct",
+                y="sector",
+                orientation="h",
+                hover_data=["symbols"],
             )
             fig.add_vline(x=0, line_dash="dash")
             fig.update_layout(height=520, xaxis_title="Average ROC %", yaxis_title="")
@@ -1228,7 +1714,9 @@ elif page == "Market":
 
 elif page == "Replay & Ops":
     st.subheader("Historical replay and operational health")
-    st.caption("Record normalized factor history, replay it deterministically, and inspect runtime health.")
+    st.caption(
+        "Record normalized factor history, replay it deterministically, and inspect runtime health."
+    )
 
     if "ops_metrics" not in st.session_state:
         st.session_state.ops_metrics = MetricsRegistry()
@@ -1239,24 +1727,42 @@ elif page == "Replay & Ops":
     monitor = HealthMonitor()
     monitor.register(
         "market-data snapshot",
-        lambda: (HealthStatus.HEALTHY, f"{len(records)} symbols available")
-        if records else (HealthStatus.DEGRADED, "No market snapshot loaded"),
+        lambda: (
+            (HealthStatus.HEALTHY, f"{len(records)} symbols available")
+            if records
+            else (HealthStatus.DEGRADED, "No market snapshot loaded")
+        ),
     )
     monitor.register(
         "execution journal",
-        lambda: (HealthStatus.HEALTHY, "SQLite journal available")
-        if (ROOT / "data").exists() else (HealthStatus.DEGRADED, "Data directory missing"),
+        lambda: (
+            (HealthStatus.HEALTHY, "SQLite journal available")
+            if (ROOT / "data").exists()
+            else (HealthStatus.DEGRADED, "Data directory missing")
+        ),
     )
-    health_rows = [{
-        "component": item.name, "status": item.status.value, "message": item.message,
-        "latency_ms": item.latency_ms, "checked_at": item.checked_at,
-    } for item in monitor.run()]
+    health_rows = [
+        {
+            "component": item.name,
+            "status": item.status.value,
+            "message": item.message,
+            "latency_ms": item.latency_ms,
+            "checked_at": item.checked_at,
+        }
+        for item in monitor.run()
+    ]
     st.markdown("#### Component health")
     st.dataframe(pd.DataFrame(health_rows), use_container_width=True, hide_index=True)
 
-    metric_rows = [{
-        "metric": item.name, "value": item.value, "unit": item.unit, "recorded_at": item.recorded_at,
-    } for item in metrics.snapshot()]
+    metric_rows = [
+        {
+            "metric": item.name,
+            "value": item.value,
+            "unit": item.unit,
+            "recorded_at": item.recorded_at,
+        }
+        for item in metrics.snapshot()
+    ]
     st.markdown("#### Runtime metrics")
     st.dataframe(pd.DataFrame(metric_rows), use_container_width=True, hide_index=True)
 
@@ -1268,22 +1774,29 @@ elif page == "Replay & Ops":
             ticks = []
             for symbol, history in controller.all_histories().items():
                 ticks.extend(
-                    Tick(symbol, row.timestamp, row.price, row.volume, "recorded") for row in history
+                    Tick(symbol, row.timestamp, row.price, row.volume, "recorded")
+                    for row in history
                 )
             count = CsvTickStore().save(replay_path, ticks)
             metrics.increment("sessions_recorded")
             st.success(f"Saved {count:,} normalized ticks to {replay_path.relative_to(ROOT)}")
     with right:
-        if st.button("Replay saved session", use_container_width=True, disabled=not replay_path.exists()):
+        if st.button(
+            "Replay saved session", use_container_width=True, disabled=not replay_path.exists()
+        ):
             loaded = CsvTickStore().load(replay_path)
             replay_controller = DashboardController(symbols, lookback)
             result = ReplayEngine().replay(loaded, replay_controller.ingest, batch_size=500)
             st.session_state.controller = replay_controller
             metrics.increment("replayed_ticks", result.processed, "ticks")
-            st.success(f"Replayed {result.processed:,} ticks in event-time order. Reloading dashboard state.")
+            st.success(
+                f"Replayed {result.processed:,} ticks in event-time order. Reloading dashboard state."
+            )
             st.rerun()
 
-    st.info("Replay uses normalized CSV ticks and does not place orders. It is safe for scanner and strategy validation.")
+    st.info(
+        "Replay uses normalized CSV ticks and does not place orders. It is safe for scanner and strategy validation."
+    )
 
 else:
     st.subheader("Sprint 8 architecture")

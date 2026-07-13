@@ -33,7 +33,9 @@ class DashboardController:
                 price = max(0.01, self._prices[symbol] * (1 + self._random.gauss(0, 0.0015)))
                 self._prices[symbol] = price
                 self.engine.update(
-                    Tick(symbol, self._clock, price, self._random.randint(100, 20_000), "simulator"),
+                    Tick(
+                        symbol, self._clock, price, self._random.randint(100, 20_000), "simulator"
+                    ),
                     sector=sector_for(symbol),
                 )
 

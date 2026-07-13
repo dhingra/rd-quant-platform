@@ -20,7 +20,9 @@ class RobustnessSummary:
 
 
 def analyze_robustness(result: OptimizationResult) -> RobustnessSummary:
-    scores = [trial.score for trial in result.trials if trial.score not in {float("inf"), float("-inf")}]
+    scores = [
+        trial.score for trial in result.trials if trial.score not in {float("inf"), float("-inf")}
+    ]
     if not scores:
         return RobustnessSummary(0, 0, 0.0, None, None, None, 0)
     ordered = sorted(scores, reverse=True)

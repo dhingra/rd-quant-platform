@@ -51,12 +51,8 @@ class ScannerEngine:
         row["vwap_distance_pct"] = (
             None if snapshot.vwap_distance is None else snapshot.vwap_distance * 100
         )
-        row["above_vwap"] = bool(
-            snapshot.vwap is not None and snapshot.price > snapshot.vwap
-        )
-        row["below_vwap"] = bool(
-            snapshot.vwap is not None and snapshot.price < snapshot.vwap
-        )
+        row["above_vwap"] = bool(snapshot.vwap is not None and snapshot.price > snapshot.vwap)
+        row["below_vwap"] = bool(snapshot.vwap is not None and snapshot.price < snapshot.vwap)
         row["orb_breakout"] = snapshot.opening_range_state == "breakout"
         row["orb_breakdown"] = snapshot.opening_range_state == "breakdown"
         return row
