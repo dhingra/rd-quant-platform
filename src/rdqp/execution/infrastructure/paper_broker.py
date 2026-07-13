@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from rdqp.execution.domain.models import (
@@ -73,7 +73,7 @@ class PaperExecutionBroker(ExecutionBroker):
             raise ValueError("A fill price is required for paper execution")
         symbol = request.symbol.upper()
         current = self._positions.get(symbol)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if request.side is ExecutionSide.BUY:
             cost = price * request.quantity + self._commission
             if cost > self._cash:
@@ -87,11 +87,15 @@ class PaperExecutionBroker(ExecutionBroker):
         else:
             if current is None or current.quantity < request.quantity:
                 raise ValueError("Insufficient paper position")
-            self._realized_pnl += (price - current.average_cost) * request.quantity - self._commission
+            self._realized_pnl += (
+                price - current.average_cost
+            ) * request.quantity - self._commission
             remaining = current.quantity - request.quantity
             self._cash += price * request.quantity - self._commission
             if remaining:
-                self._positions[symbol] = BrokerPosition(symbol, remaining, current.average_cost, price)
+                self._positions[symbol] = BrokerPosition(
+                    symbol, remaining, current.average_cost, price
+                )
             else:
                 del self._positions[symbol]
         broker_order_id = f"PAPER-{uuid4().hex[:12]}"
@@ -125,7 +129,10 @@ class PaperExecutionBroker(ExecutionBroker):
 
     def cancel(self, broker_order_id: str) -> None:
         for key, order in self._orders.items():
-            if order.broker_order_id == broker_order_id and order.status is ExecutionStatus.SUBMITTED:
+            if (
+                order.broker_order_id == broker_order_id
+                and order.status is ExecutionStatus.SUBMITTED
+            ):
                 self._orders[key] = replace(order, status=ExecutionStatus.CANCELLED)
                 return
 

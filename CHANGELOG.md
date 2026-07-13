@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0-alpha — Sprint 9
+
+- Added Research & Optimization Lab.
+- Added deterministic grid-search parameter optimization.
+- Added rolling walk-forward validation.
+- Added seeded Monte Carlo trade-sequence analysis.
+- Added extended performance metrics.
+- Added SQLite experiment tracking and Research Lab UI.
+- Added research tests and documentation.
+
 ## 0.7.0-alpha — Sprint 8
 
 ### Added

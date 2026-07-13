@@ -117,4 +117,6 @@ class ReactiveFactorEngine:
         return tuple(self._series[symbol.upper()])
 
     def reset(self) -> None:
-        self.__init__(int(self._roc_window.total_seconds()), int(self._opening_range.total_seconds() / 60))
+        self.__init__(
+            int(self._roc_window.total_seconds()), int(self._opening_range.total_seconds() / 60)
+        )

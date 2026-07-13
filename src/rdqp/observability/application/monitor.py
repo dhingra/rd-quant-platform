@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from time import perf_counter
 
 from rdqp.observability.domain.models import ComponentHealth, HealthStatus, RuntimeMetric
@@ -27,9 +27,7 @@ class HealthMonitor:
             except Exception as exc:  # defensive boundary around infrastructure checks
                 status, message = HealthStatus.UNHEALTHY, str(exc)
             latency = (perf_counter() - started) * 1000
-            results.append(
-                ComponentHealth(name, status, message, datetime.now(timezone.utc), latency)
-            )
+            results.append(ComponentHealth(name, status, message, datetime.now(UTC), latency))
         return tuple(results)
 
 
@@ -38,7 +36,7 @@ class MetricsRegistry:
         self._values: dict[str, RuntimeMetric] = {}
 
     def set(self, name: str, value: float, unit: str = "count") -> None:
-        self._values[name] = RuntimeMetric(name, float(value), unit, datetime.now(timezone.utc))
+        self._values[name] = RuntimeMetric(name, float(value), unit, datetime.now(UTC))
 
     def increment(self, name: str, amount: float = 1.0, unit: str = "count") -> None:
         current = self._values.get(name)

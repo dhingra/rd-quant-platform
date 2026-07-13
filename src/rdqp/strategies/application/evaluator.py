@@ -11,7 +11,9 @@ def snapshot_value(snapshot: FactorSnapshot, field: str) -> object:
         "price": snapshot.price,
         "roc_pct": None if snapshot.roc is None else snapshot.roc * 100,
         "rvol": snapshot.rvol,
-        "vwap_distance_pct": None if snapshot.vwap_distance is None else snapshot.vwap_distance * 100,
+        "vwap_distance_pct": None
+        if snapshot.vwap_distance is None
+        else snapshot.vwap_distance * 100,
         "gap_pct": None if snapshot.gap is None else snapshot.gap * 100,
         "volume": snapshot.volume,
         "rank": snapshot.rank,

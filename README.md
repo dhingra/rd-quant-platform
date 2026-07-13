@@ -169,3 +169,13 @@ This project is for research, education, and paper-trading validation. Yahoo Fin
 - Component health monitoring
 - Runtime metrics and operational status page
 - Replay remains isolated from broker execution
+
+## Sprint 9 — Research & Optimization Lab
+
+- deterministic grid-search optimization
+- rolling walk-forward validation
+- Monte Carlo trade-sequence analysis
+- extended performance metrics
+- persistent SQLite experiment journal
+
+See [`docs/research_lab.md`](docs/research_lab.md).
