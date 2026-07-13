@@ -54,24 +54,16 @@ class BacktestEngine:
                 entry, quantity = position
                 price_return = snapshot.price / entry.price - 1
                 reason: str | None = None
-                if (
-                    definition.stop_loss_pct is not None
-                    and price_return <= -definition.stop_loss_pct
-                ):
+                if definition.stop_loss_pct is not None and price_return <= -definition.stop_loss_pct:
                     reason = "stop_loss"
-                elif (
-                    definition.take_profit_pct is not None
-                    and price_return >= definition.take_profit_pct
-                ):
+                elif definition.take_profit_pct is not None and price_return >= definition.take_profit_pct:
                     reason = "take_profit"
                 elif definition.exit_rules and evaluate_all(snapshot, definition.exit_rules):
                     reason = "exit_rules"
                 if reason:
                     proceeds = quantity * snapshot.price - definition.commission_per_trade
                     cash += proceeds
-                    pnl = (
-                        snapshot.price - entry.price
-                    ) * quantity - 2 * definition.commission_per_trade
+                    pnl = (snapshot.price - entry.price) * quantity - 2 * definition.commission_per_trade
                     trades.append(
                         TradeRecord(
                             symbol=symbol,
@@ -87,9 +79,7 @@ class BacktestEngine:
                     )
                     del positions[symbol]
 
-            market_value = sum(
-                qty * latest_prices.get(sym, entry.price) for sym, (entry, qty) in positions.items()
-            )
+            market_value = sum(qty * latest_prices.get(sym, entry.price) for sym, (entry, qty) in positions.items())
             equity_points.append(EquityPoint(timestamp, cash + market_value))
 
         if events:
@@ -114,9 +104,7 @@ class BacktestEngine:
             equity_points.append(EquityPoint(final_time, cash))
 
         metrics = self._metrics(definition.initial_capital, cash, trades, equity_points)
-        return BacktestResult(
-            definition.name, tuple(trades), tuple(equity_points), metrics, tuple(warnings)
-        )
+        return BacktestResult(definition.name, tuple(trades), tuple(equity_points), metrics, tuple(warnings))
 
     @staticmethod
     def _metrics(

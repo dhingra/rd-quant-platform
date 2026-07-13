@@ -4,9 +4,7 @@ from rdqp.execution import ExecutionSide, OrderRequest, PaperExecutionBroker
 def test_paper_broker_fills_and_updates_account():
     broker = PaperExecutionBroker(initial_cash=10_000)
     broker.connect()
-    order = broker.submit(
-        "ORDER-1", OrderRequest("AAPL", ExecutionSide.BUY, 10, reference_price=100)
-    )
+    order = broker.submit("ORDER-1", OrderRequest("AAPL", ExecutionSide.BUY, 10, reference_price=100))
     assert order.filled_quantity == 10
     snapshot = broker.account_snapshot({"AAPL": 105})
     assert snapshot.cash == 9_000

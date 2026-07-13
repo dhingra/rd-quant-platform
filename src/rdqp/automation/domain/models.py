@@ -1,17 +1,13 @@
 """Immutable automation-domain records."""
-
 from __future__ import annotations
-
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from enum import StrEnum
-
 
 class AutomationMode(StrEnum):
     DISABLED = "DISABLED"
     DRY_RUN = "DRY_RUN"
     PAPER_ARMED = "PAPER_ARMED"
-
 
 @dataclass(frozen=True, slots=True)
 class AutomationConfig:
@@ -31,7 +27,6 @@ class AutomationConfig:
         if self.cooldown_seconds < 0:
             raise ValueError("cooldown_seconds cannot be negative")
 
-
 @dataclass(frozen=True, slots=True)
 class AutomationDecision:
     symbol: str
@@ -40,11 +35,10 @@ class AutomationDecision:
     submitted: bool = False
     order_id: str | None = None
 
-
 @dataclass(frozen=True, slots=True)
 class AutomationRun:
     strategy_name: str
     mode: AutomationMode
     evaluated: int
     decisions: tuple[AutomationDecision, ...]
-    started_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    started_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))

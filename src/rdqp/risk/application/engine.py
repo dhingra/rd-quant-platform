@@ -37,9 +37,7 @@ class RiskEngine:
         if projected_quantity < 0 and not limits.allow_short_selling:
             return RiskDecision(False, "Short selling is disabled", notional)
         if abs(projected_quantity * price) > limits.max_position_notional:
-            return RiskDecision(
-                False, "Projected position exceeds configured notional limit", notional
-            )
+            return RiskDecision(False, "Projected position exceeds configured notional limit", notional)
         if request.side is ExecutionSide.BUY and notional > account.buying_power:
             return RiskDecision(False, "Insufficient buying power", notional)
         return RiskDecision(True, "Approved", notional)

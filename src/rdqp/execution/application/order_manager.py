@@ -47,9 +47,7 @@ class OrderManager:
             rejected = ManagedOrder(
                 order_id=order_id,
                 request=request,
-                mode=ExecutionMode.PAPER
-                if self._broker.name == "paper"
-                else ExecutionMode.IBKR_PAPER,
+                mode=ExecutionMode.PAPER if self._broker.name == "paper" else ExecutionMode.IBKR_PAPER,
                 status=ExecutionStatus.REJECTED,
                 message=decision.reason,
             )
@@ -61,9 +59,7 @@ class OrderManager:
             order = ManagedOrder(
                 order_id=order_id,
                 request=request,
-                mode=ExecutionMode.PAPER
-                if self._broker.name == "paper"
-                else ExecutionMode.IBKR_PAPER,
+                mode=ExecutionMode.PAPER if self._broker.name == "paper" else ExecutionMode.IBKR_PAPER,
                 status=ExecutionStatus.ERROR,
                 message=str(exc),
             )

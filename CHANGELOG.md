@@ -75,3 +75,11 @@ All Sprint 1–3 architecture, dashboard, market analytics, data providers, scan
 ### Safety
 - automated IBKR routing is not enabled
 - live trading remains unsupported
+
+## 0.10.0-alpha — Sprint 10
+
+- Added weighted multi-factor ranking.
+- Added deployment-readiness scorecards.
+- Added strategy comparison and robustness analysis.
+- Added optimization heatmaps and walk-forward charts.
+- Corrected Monte Carlo sampling to bootstrap with replacement.

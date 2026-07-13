@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from contextlib import closing
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
@@ -17,18 +16,18 @@ class SqliteExperimentRepository:
     def __init__(self, path: Path) -> None:
         self._path = path
         path.parent.mkdir(parents=True, exist_ok=True)
-        with closing(self._connect()) as connection, connection:
+        with self._connect() as connection:
             connection.execute(
                 """CREATE TABLE IF NOT EXISTS research_experiments (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    created_at TEXT NOT NULL,
-                    strategy_json TEXT NOT NULL,
-                    objective TEXT NOT NULL,
-                    parameters_json TEXT NOT NULL,
-                    metrics_json TEXT NOT NULL,
-                    notes TEXT NOT NULL
-                    )"""
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                strategy_json TEXT NOT NULL,
+                objective TEXT NOT NULL,
+                parameters_json TEXT NOT NULL,
+                metrics_json TEXT NOT NULL,
+                notes TEXT NOT NULL
+                )"""
             )
 
     def save(self, experiment: ResearchExperiment) -> int:
@@ -38,20 +37,9 @@ class SqliteExperimentRepository:
                 {"field": rule["field"], "operator": str(rule["operator"]), "value": rule["value"]}
                 for rule in strategy[key]
             ]
-        with closing(self._connect()) as connection, connection:
+        with self._connect() as connection:
             cursor = connection.execute(
-                """
-                    INSERT INTO research_experiments (
-                        name,
-                        created_at,
-                        strategy_json,
-                        objective,
-                        parameters_json,
-                        metrics_json,
-                        notes
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    """,
+                "INSERT INTO research_experiments(name,created_at,strategy_json,objective,parameters_json,metrics_json,notes) VALUES(?,?,?,?,?,?,?)",
                 (
                     experiment.name,
                     experiment.created_at.astimezone(UTC).isoformat(),
@@ -62,27 +50,12 @@ class SqliteExperimentRepository:
                     experiment.notes,
                 ),
             )
-            if cursor.lastrowid is None:
-                raise RuntimeError("SQLite did not return an experiment ID")
-            return cursor.lastrowid
+            return int(cursor.lastrowid)
 
     def list(self, limit: int = 100) -> tuple[ResearchExperiment, ...]:
-        with closing(self._connect()) as connection, connection:
+        with self._connect() as connection:
             rows = connection.execute(
-                """
-                    SELECT
-                        id,
-                        name,
-                        created_at,
-                        strategy_json,
-                        objective,
-                        parameters_json,
-                        metrics_json,
-                        notes
-                    FROM research_experiments
-                    ORDER BY id DESC
-                    LIMIT ?
-                    """,
+                "SELECT id,name,created_at,strategy_json,objective,parameters_json,metrics_json,notes FROM research_experiments ORDER BY id DESC LIMIT ?",
                 (limit,),
             ).fetchall()
         return tuple(self._decode(row) for row in rows)
@@ -111,7 +84,7 @@ class SqliteExperimentRepository:
             description=strategy_raw.get("description", ""),
         )
         return ResearchExperiment(
-            id=int(str(row[0])),
+            id=int(row[0]),
             name=str(row[1]),
             created_at=datetime.fromisoformat(str(row[2])),
             strategy=strategy,

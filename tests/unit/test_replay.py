@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -8,7 +8,7 @@ from rdqp.replay import CsvTickStore, ReplayEngine
 
 
 def sample_ticks() -> list[Tick]:
-    start = datetime(2026, 1, 1, tzinfo=UTC)
+    start = datetime(2026, 1, 1, tzinfo=timezone.utc)
     return [
         Tick("MSFT", start + timedelta(seconds=2), 102.0, 20, "test"),
         Tick("AAPL", start, 100.0, 10, "test"),

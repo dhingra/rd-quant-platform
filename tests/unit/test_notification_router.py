@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from rdqp.notifications import InMemoryNotificationSink, Notification, NotificationRouter
 
@@ -6,7 +6,7 @@ from rdqp.notifications import InMemoryNotificationSink, Notification, Notificat
 def test_router_deduplicates_within_cooldown() -> None:
     sink = InMemoryNotificationSink()
     router = NotificationRouter([sink], cooldown_seconds=60)
-    now = datetime(2026, 7, 13, tzinfo=UTC)
+    now = datetime(2026, 7, 13, tzinfo=timezone.utc)
     notification = Notification("risk", "Blocked", "Order blocked", dedupe_key="risk-block")
     assert router.publish(notification, now)
     assert not router.publish(notification, now + timedelta(seconds=30))

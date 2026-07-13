@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -8,7 +8,7 @@ from rdqp.market.domain.models import Tick
 
 
 def tick(symbol: str, seconds: int, price: float, size: float = 100) -> Tick:
-    start = datetime(2026, 1, 2, 14, 30, tzinfo=UTC)
+    start = datetime(2026, 1, 2, 14, 30, tzinfo=timezone.utc)
     return Tick(symbol, start + timedelta(seconds=seconds), price, size, "test")
 
 

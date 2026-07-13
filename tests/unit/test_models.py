@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 import pytest
 
@@ -7,7 +7,7 @@ from rdqp.market.domain.models import Portfolio, Position, Tick
 
 def test_tick_requires_positive_price() -> None:
     with pytest.raises(ValueError):
-        Tick("AAPL", datetime.now(UTC), 0)
+        Tick("AAPL", datetime.now(timezone.utc), 0)
 
 
 def test_tick_requires_aware_timestamp() -> None:

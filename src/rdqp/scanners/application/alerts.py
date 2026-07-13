@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
-from rdqp.scanners.domain.models import ScannerAlert, ScanResult
+from rdqp.scanners.domain.models import ScanResult, ScannerAlert
 
 
 class AlertEngine:
@@ -17,7 +17,7 @@ class AlertEngine:
         entered = sorted(current - previous)
         self._previous[result.definition.name] = current
         by_symbol = {match.symbol: match for match in result.matches}
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         return tuple(
             ScannerAlert(
                 scan_name=result.definition.name,

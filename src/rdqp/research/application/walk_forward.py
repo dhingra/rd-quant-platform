@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import replace
 from datetime import datetime
-from typing import Any, cast
 
 from rdqp.analytics.domain.models import FactorSnapshot
 from rdqp.research.application.optimizer import GridSearchOptimizer
@@ -53,11 +51,11 @@ class WalkForwardEngine:
             optimized = self._optimizer.run(definition, train, ranges, objective)
             if optimized.best_trial is None:
                 continue
+            candidate = optimized.best_trial.result
             selected = optimized.best_trial.parameters
-            configured = replace(
-                definition,
-                **cast(dict[str, Any], selected),
-            )
+            from dataclasses import replace
+
+            configured = replace(definition, **selected)
             out_result = self._backtester.run(configured, test)
             fold_results.append(
                 WalkForwardFold(

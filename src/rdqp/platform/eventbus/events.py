@@ -1,8 +1,8 @@
 """Domain events for the streaming pipeline."""
 
-from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Mapping
 
 from rdqp.market.domain.models import Order, Tick, Trade, utc_now
 

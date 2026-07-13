@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import random
 from collections.abc import AsyncIterator, Sequence
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from rdqp.market.domain.models import Tick
 from rdqp.market.ports.market_data import MarketDataProvider
@@ -49,7 +49,7 @@ class SimulatorProvider(MarketDataProvider):
                 self._prices[symbol] = price
                 yield Tick(
                     symbol=symbol,
-                    timestamp=datetime.now(UTC),
+                    timestamp=datetime.now(timezone.utc),
                     price=price,
                     size=float(self._random.randint(1, 1000)),
                     source=self.name,

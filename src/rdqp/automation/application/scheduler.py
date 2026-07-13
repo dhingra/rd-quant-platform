@@ -1,10 +1,9 @@
 """Single-process scheduler for guarded automation cycles."""
-
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from typing import Callable
 
 from rdqp.automation.domain.scheduling import SchedulerConfig, SessionDecision
 from rdqp.notifications import Notification, NotificationRouter, NotificationSeverity
@@ -38,7 +37,7 @@ class AutomationScheduler:
         self._last_message = "Scheduler created"
 
     def start(self, now: datetime | None = None) -> None:
-        now = now or datetime.now(UTC)
+        now = now or datetime.now(timezone.utc)
         self._running = True
         self._next_run_at = now
         self._last_message = "Scheduler started"
@@ -54,11 +53,11 @@ class AutomationScheduler:
 
     def resume(self, now: datetime | None = None) -> None:
         self._paused = False
-        self._next_run_at = now or datetime.now(UTC)
+        self._next_run_at = now or datetime.now(timezone.utc)
         self._last_message = "Scheduler resumed"
 
     def run_due(self, now: datetime | None = None) -> bool:
-        now = now or datetime.now(UTC)
+        now = now or datetime.now(timezone.utc)
         if not self._running or self._next_run_at is None or now < self._next_run_at:
             return False
         decision = self.config.session_policy.evaluate(now, paused=self._paused)
@@ -97,25 +96,21 @@ class AutomationScheduler:
     def _notify_failure(self, exc: Exception) -> None:
         if self._notifications is None:
             return
-        self._notifications.publish(
-            Notification(
-                category="automation",
-                title="Automation cycle failed",
-                message=str(exc),
-                severity=NotificationSeverity.ERROR,
-                dedupe_key="automation-cycle-failure",
-            )
-        )
+        self._notifications.publish(Notification(
+            category="automation",
+            title="Automation cycle failed",
+            message=str(exc),
+            severity=NotificationSeverity.ERROR,
+            dedupe_key="automation-cycle-failure",
+        ))
 
     def _notify_shutdown(self) -> None:
         if self._notifications is None:
             return
-        self._notifications.publish(
-            Notification(
-                category="automation",
-                title="Automation scheduler stopped",
-                message="Maximum consecutive failures reached.",
-                severity=NotificationSeverity.CRITICAL,
-                dedupe_key="automation-scheduler-stopped",
-            )
-        )
+        self._notifications.publish(Notification(
+            category="automation",
+            title="Automation scheduler stopped",
+            message="Maximum consecutive failures reached.",
+            severity=NotificationSeverity.CRITICAL,
+            dedupe_key="automation-scheduler-stopped",
+        ))

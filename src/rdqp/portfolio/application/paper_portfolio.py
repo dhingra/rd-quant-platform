@@ -2,14 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
-from rdqp.portfolio.domain.models import (
-    JournalEntry,
-    OrderSide,
-    PaperPortfolioSnapshot,
-    PaperPosition,
-)
+from rdqp.portfolio.domain.models import JournalEntry, OrderSide, PaperPortfolioSnapshot, PaperPosition
 
 
 class PaperPortfolio:
@@ -34,7 +29,7 @@ class PaperPortfolio:
         average = (old_cost + cost) / new_qty
         self.cash -= cost
         self._positions[symbol] = PaperPosition(symbol, new_qty, average, price)
-        entry = JournalEntry(datetime.now(UTC), symbol, OrderSide.BUY, quantity, price, 0.0, note)
+        entry = JournalEntry(datetime.now(timezone.utc), symbol, OrderSide.BUY, quantity, price, 0.0, note)
         self._journal.append(entry)
         return entry
 
@@ -51,18 +46,14 @@ class PaperPortfolio:
             self._positions[symbol] = PaperPosition(symbol, remaining, current.average_price, price)
         else:
             del self._positions[symbol]
-        entry = JournalEntry(
-            datetime.now(UTC), symbol, OrderSide.SELL, quantity, price, realized, note
-        )
+        entry = JournalEntry(datetime.now(timezone.utc), symbol, OrderSide.SELL, quantity, price, realized, note)
         self._journal.append(entry)
         return entry
 
     def mark(self, prices: dict[str, float]) -> None:
         for symbol, current in list(self._positions.items()):
             if symbol in prices:
-                self._positions[symbol] = PaperPosition(
-                    symbol, current.quantity, current.average_price, prices[symbol]
-                )
+                self._positions[symbol] = PaperPosition(symbol, current.quantity, current.average_price, prices[symbol])
 
     def snapshot(self) -> PaperPortfolioSnapshot:
         return PaperPortfolioSnapshot(
