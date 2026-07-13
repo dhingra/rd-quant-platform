@@ -1,4 +1,4 @@
-"""RD Quant Terminal — Sprint 5 cumulative research and paper-execution platform."""
+"""RD Quant Terminal — Sprint 7 cumulative automation and paper-execution platform."""
 
 from __future__ import annotations
 
@@ -32,6 +32,7 @@ from rdqp.strategies import BacktestEngine, RuleOperator, StrategyDefinition, St
 from rdqp.strategies.infrastructure import YamlStrategyRepository
 from rdqp.replay import CsvTickStore, ReplayEngine
 from rdqp.observability import HealthMonitor, HealthStatus, MetricsRegistry
+from rdqp.automation import AutomationConfig, AutomationMode, AutomationRunner, JsonlAutomationJournal
 
 st.set_page_config(page_title="RD Quant Platform", page_icon="📈", layout="wide")
 settings = load_settings(ROOT / "config/app.yaml")
@@ -102,7 +103,7 @@ def refresh() -> None:
 header_left, header_right = st.columns([5, 1])
 with header_left:
     st.title("RD Quant Platform")
-    st.caption("Sprint 5 · Execution Platform · risk-gated paper orders → broker sync → durable journal")
+    st.caption("Sprint 7 · Guarded automation · strategy rules → risk checks → paper execution → audit")
 with header_right:
     if st.button("Refresh data", type="primary", use_container_width=True):
         try:
@@ -126,7 +127,7 @@ metric_cols[3].metric("Std dev", "n/a" if stats.standard_deviation is None else 
 metric_cols[4].metric("Skew", "n/a" if stats.skew is None else f"{stats.skew:+.2f}")
 metric_cols[5].metric("Positive", "n/a" if stats.positive_percentage is None else f"{stats.positive_percentage:.0%}")
 
-page = st.segmented_control("View", ["Leaderboard", "Scanner", "Strategy Lab", "Execution", "Market", "Replay & Ops", "Architecture"], default="Leaderboard")
+page = st.segmented_control("View", ["Leaderboard", "Scanner", "Strategy Lab", "Execution", "Automation", "Market", "Replay & Ops", "Architecture"], default="Leaderboard")
 
 if page == "Leaderboard":
     st.subheader("Live cross-sectional momentum")
@@ -706,6 +707,65 @@ elif page == "Execution":
         st.dataframe(pd.DataFrame(fill_rows), use_container_width=True, hide_index=True)
     else:
         st.caption("No fills recorded.")
+
+elif page == "Automation":
+    st.subheader("Strategy Automation")
+    st.caption("Guarded paper-only orchestration. Start in DRY_RUN; PAPER_ARMED routes only to the local paper broker in this release.")
+    strategy_repo = YamlStrategyRepository(ROOT / "data/saved_strategies.yaml")
+    strategies = strategy_repo.list()
+    if not strategies:
+        st.info("Save at least one strategy in Strategy Lab before running automation.")
+    elif not records:
+        st.info("Load market data before running an automation cycle.")
+    else:
+        names = [item.name for item in strategies]
+        selected_name = st.selectbox("Saved strategy", names)
+        selected_strategy = next(item for item in strategies if item.name == selected_name)
+        mode = AutomationMode(st.radio("Mode", [item.value for item in AutomationMode], horizontal=True, index=1))
+        a1, a2, a3, a4 = st.columns(4)
+        quantity = int(a1.number_input("Quantity", min_value=1, value=10, step=1))
+        max_orders = int(a2.number_input("Max orders/cycle", min_value=0, value=3, step=1))
+        max_positions = int(a3.number_input("Max open positions", min_value=0, value=5, step=1))
+        cooldown = int(a4.number_input("Cooldown seconds", min_value=0, value=300, step=30))
+        positive_guard = st.toggle("Require positive ROC for entries", value=True)
+        confirm = st.text_input("Type AUTOMATE to enable PAPER_ARMED", value="")
+        armed_ok = mode is not AutomationMode.PAPER_ARMED or confirm == "AUTOMATE"
+        if mode is AutomationMode.PAPER_ARMED and not armed_ok:
+            st.warning("PAPER_ARMED remains locked until AUTOMATE is typed exactly.")
+        if "automation_paper_broker" not in st.session_state:
+            auto_broker = PaperExecutionBroker(100_000.0)
+            auto_broker.connect()
+            st.session_state.automation_paper_broker = auto_broker
+        auto_journal = SQLiteTradeJournal(ROOT / "data/automation_execution.sqlite3")
+        auto_manager = OrderManager(st.session_state.automation_paper_broker, auto_journal)
+        run_journal = JsonlAutomationJournal(ROOT / "data/automation_runs.jsonl")
+        config = AutomationConfig(
+            mode=mode, quantity=quantity, max_orders_per_cycle=max_orders,
+            max_open_positions=max_positions, cooldown_seconds=cooldown,
+            require_positive_roc=positive_guard,
+        )
+        limits = RiskLimits()
+        if st.button("Run one guarded automation cycle", type="primary", disabled=not armed_ok):
+            runner = st.session_state.get("automation_runner")
+            if runner is None:
+                runner = AutomationRunner(auto_manager, run_journal)
+                st.session_state.automation_runner = runner
+            result = runner.run_cycle(selected_strategy, list(records), config, limits)
+            st.session_state.last_automation_run = result
+        result = st.session_state.get("last_automation_run")
+        if result is not None:
+            st.markdown("#### Latest cycle")
+            st.write(f"**{result.strategy_name}** · {result.mode.value} · evaluated {result.evaluated} symbols")
+            st.dataframe(pd.DataFrame([{
+                "symbol": d.symbol, "action": d.action, "reason": d.reason,
+                "submitted": d.submitted, "order_id": d.order_id,
+            } for d in result.decisions]), use_container_width=True, hide_index=True)
+        st.markdown("#### Automation audit")
+        recent_runs = run_journal.recent(25)
+        if recent_runs:
+            st.dataframe(pd.DataFrame(recent_runs), use_container_width=True, hide_index=True)
+        else:
+            st.caption("No automation cycles journaled yet.")
 
 elif page == "Market":
     st.subheader("Market analytics")
