@@ -1,13 +1,13 @@
 # RD Quant Platform
 
-**Version:** `0.3.0-alpha`  
+**Version:** `0.4.0-alpha`  
 **Sprint:** 3 — Scanner Engine
 
 RD Quant Platform is a modular, event-driven quantitative market analytics and trading framework inspired by the DolphinDB pattern of per-symbol stateful computation followed by cross-sectional analysis.
 
-## Sprint 3 deliverables
+## Sprint 4 deliverables
 
-Sprint 3 preserves the complete Sprint 2 dashboard and adds a configurable scanner subsystem as a separate application/domain package.
+Sprint 4 preserves the complete Sprint 2 dashboard and adds a configurable scanner subsystem as a separate application/domain package.
 
 - All Sprint 1 architecture and Sprint 2 market-dashboard capabilities
 - Configurable cross-sectional scanner engine
@@ -107,8 +107,22 @@ mypy src/rdqp
 
 - Sprint 1: architecture foundation — complete
 - Sprint 2: streaming market dashboard — complete
-- Sprint 3: configurable scanner engine, saved scans, and alerts — complete
+- Sprint 4: configurable scanner engine, saved scans, and alerts — complete
 - Sprint 4: strategy lab, backtesting, performance analytics, paper portfolio
 - Sprint 5: IBKR paper execution, portfolio, risk, orders, and journal
 
 Execution remains disabled by default.
+
+
+## Sprint 4 — Strategy Lab
+
+Sprint 4 is cumulative and retains the streaming dashboard and scanner engine. It adds:
+
+- visual entry and exit rule builder
+- saved YAML strategies
+- event-time backtesting over loaded factor histories
+- equity curve, trade list, total return, win rate, profit factor, drawdown, expectancy, and Sharpe proxy
+- isolated in-memory paper portfolio
+- manual paper orders, live marking, positions, P&L, and trade journal
+
+Open **Strategy Lab** in the terminal after loading data. Simulator mode provides the deepest immediately available history. No Strategy Lab action sends an IBKR order.
