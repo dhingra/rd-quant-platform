@@ -1,2 +1,4 @@
 from .runner import AutomationRunner
-__all__ = ["AutomationRunner"]
+from .scheduler import AutomationScheduler, SchedulerStatus
+
+__all__ = ["AutomationRunner", "AutomationScheduler", "SchedulerStatus"]

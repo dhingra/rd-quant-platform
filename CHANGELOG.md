@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.0-alpha — Sprint 8
+
+### Added
+- operator-controlled automation scheduler
+- configurable market-session and weekend guards
+- scheduler pause/resume and repeated-failure shutdown
+- notification router with cooldown deduplication
+- in-memory and JSONL notification sinks
+- persistent SQLite automation state store
+- Scheduler & Alerts terminal page
+- Sprint 8 documentation and tests
+
 ## 0.5.0-alpha — Sprint 5
 
 - Added broker-neutral execution models and ports.

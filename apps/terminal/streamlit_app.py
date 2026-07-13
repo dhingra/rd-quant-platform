@@ -32,7 +32,13 @@ from rdqp.strategies import BacktestEngine, RuleOperator, StrategyDefinition, St
 from rdqp.strategies.infrastructure import YamlStrategyRepository
 from rdqp.replay import CsvTickStore, ReplayEngine
 from rdqp.observability import HealthMonitor, HealthStatus, MetricsRegistry
-from rdqp.automation import AutomationConfig, AutomationMode, AutomationRunner, JsonlAutomationJournal
+from rdqp.automation import (
+    AutomationConfig, AutomationMode, AutomationRunner, JsonlAutomationJournal,
+    AutomationScheduler, MarketSessionPolicy, SchedulerConfig, SQLiteAutomationStateStore,
+)
+from rdqp.notifications import (
+    InMemoryNotificationSink, JsonlNotificationSink, NotificationRouter,
+)
 
 st.set_page_config(page_title="RD Quant Platform", page_icon="📈", layout="wide")
 settings = load_settings(ROOT / "config/app.yaml")
@@ -103,7 +109,7 @@ def refresh() -> None:
 header_left, header_right = st.columns([5, 1])
 with header_left:
     st.title("RD Quant Platform")
-    st.caption("Sprint 7 · Guarded automation · strategy rules → risk checks → paper execution → audit")
+    st.caption("Sprint 8 · Scheduled paper automation · session guards · alerts · persistent operations state")
 with header_right:
     if st.button("Refresh data", type="primary", use_container_width=True):
         try:
@@ -127,7 +133,7 @@ metric_cols[3].metric("Std dev", "n/a" if stats.standard_deviation is None else 
 metric_cols[4].metric("Skew", "n/a" if stats.skew is None else f"{stats.skew:+.2f}")
 metric_cols[5].metric("Positive", "n/a" if stats.positive_percentage is None else f"{stats.positive_percentage:.0%}")
 
-page = st.segmented_control("View", ["Leaderboard", "Scanner", "Strategy Lab", "Execution", "Automation", "Market", "Replay & Ops", "Architecture"], default="Leaderboard")
+page = st.segmented_control("View", ["Leaderboard", "Scanner", "Strategy Lab", "Execution", "Automation", "Scheduler & Alerts", "Market", "Replay & Ops", "Architecture"], default="Leaderboard")
 
 if page == "Leaderboard":
     st.subheader("Live cross-sectional momentum")
@@ -767,6 +773,106 @@ elif page == "Automation":
         else:
             st.caption("No automation cycles journaled yet.")
 
+elif page == "Scheduler & Alerts":
+    st.subheader("Automation Scheduler & Alert Center")
+    st.caption("Session-aware scheduling, persistent operator state, failure shutdown, and deduplicated local alerts.")
+
+    if "notification_memory" not in st.session_state:
+        st.session_state.notification_memory = InMemoryNotificationSink()
+    if "notification_router" not in st.session_state:
+        st.session_state.notification_router = NotificationRouter(
+            [st.session_state.notification_memory, JsonlNotificationSink(ROOT / "data/notifications.jsonl")],
+            cooldown_seconds=60,
+        )
+    if "automation_state_store" not in st.session_state:
+        st.session_state.automation_state_store = SQLiteAutomationStateStore(ROOT / "data/automation_state.sqlite3")
+
+    state_store = st.session_state.automation_state_store
+    c1, c2, c3, c4 = st.columns(4)
+    interval = int(c1.number_input("Cycle interval (sec)", min_value=5, value=60, step=5))
+    failure_limit = int(c2.number_input("Failure shutdown threshold", min_value=1, value=3, step=1))
+    session_start = c3.time_input("Session start", value=pd.Timestamp("09:30").time())
+    session_end = c4.time_input("Session end", value=pd.Timestamp("16:00").time())
+    timezone_name = st.text_input("Session timezone", value="America/New_York")
+
+    if "scheduler_cycle_counter" not in st.session_state:
+        st.session_state.scheduler_cycle_counter = 0
+
+    def scheduled_cycle() -> None:
+        st.session_state.scheduler_cycle_counter += 1
+        state_store.set("cycle_counter", st.session_state.scheduler_cycle_counter)
+        state_store.set("last_cycle_source", source)
+        state_store.set("last_cycle_symbols", symbols)
+
+    requested_config = SchedulerConfig(
+        interval_seconds=interval,
+        max_consecutive_failures=failure_limit,
+        session_policy=MarketSessionPolicy(
+            timezone_name=timezone_name,
+            start_time=session_start,
+            end_time=session_end,
+        ),
+    )
+    scheduler_signature = (interval, failure_limit, timezone_name, session_start.isoformat(), session_end.isoformat())
+    if st.session_state.get("scheduler_signature") != scheduler_signature:
+        st.session_state.scheduler_signature = scheduler_signature
+        st.session_state.automation_scheduler = AutomationScheduler(
+            requested_config,
+            scheduled_cycle,
+            st.session_state.notification_router,
+        )
+    scheduler = st.session_state.automation_scheduler
+
+    b1, b2, b3, b4 = st.columns(4)
+    if b1.button("Start", type="primary", use_container_width=True):
+        scheduler.start()
+        state_store.set("operator_state", "RUNNING")
+    if b2.button("Run due cycle", use_container_width=True):
+        ran = scheduler.run_due()
+        st.toast("Cycle completed" if ran else scheduler.status().last_message)
+    if b3.button("Pause / Resume", use_container_width=True):
+        if scheduler.status().paused:
+            scheduler.resume()
+            state_store.set("operator_state", "RUNNING")
+        else:
+            scheduler.pause()
+            state_store.set("operator_state", "PAUSED")
+    if b4.button("Stop", use_container_width=True):
+        scheduler.stop()
+        state_store.set("operator_state", "STOPPED")
+
+    status = scheduler.status()
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Scheduler", "RUNNING" if status.running else "STOPPED")
+    m2.metric("Paused", "YES" if status.paused else "NO")
+    m3.metric("Cycles", int(state_store.get("cycle_counter", 0)))
+    m4.metric("Failures", status.consecutive_failures)
+    st.write(status.last_message)
+    st.caption(f"Next run: {status.next_run_at or 'n/a'} · Last run: {status.last_run_at or 'n/a'}")
+
+    st.markdown("#### Persistent operations state")
+    st.json({
+        "operator_state": state_store.get("operator_state", "NOT_SET"),
+        "cycle_counter": state_store.get("cycle_counter", 0),
+        "last_cycle_source": state_store.get("last_cycle_source"),
+        "last_cycle_symbols": state_store.get("last_cycle_symbols", []),
+    })
+
+    st.markdown("#### Notification center")
+    notifications = st.session_state.notification_memory.items
+    if notifications:
+        st.dataframe(pd.DataFrame([{
+            "created_at": item.created_at,
+            "severity": item.severity.value,
+            "category": item.category,
+            "symbol": item.symbol,
+            "title": item.title,
+            "message": item.message,
+        } for item in notifications]), use_container_width=True, hide_index=True)
+    else:
+        st.caption("No operational notifications yet.")
+    st.info("Sprint 8 scheduler is intentionally single-process and operator-driven. It does not create unattended IBKR sessions.")
+
 elif page == "Market":
     st.subheader("Market analytics")
     breadth_cols = st.columns(5)
@@ -881,7 +987,7 @@ elif page == "Replay & Ops":
     st.info("Replay uses normalized CSV ticks and does not place orders. It is safe for scanner and strategy validation.")
 
 else:
-    st.subheader("Sprint 6 architecture")
+    st.subheader("Sprint 8 architecture")
     st.code(
         """Yahoo / IBKR / Simulator adapters
               │
