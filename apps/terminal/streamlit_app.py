@@ -25,7 +25,11 @@ settings = load_settings(ROOT / "config/app.yaml")
 
 
 def parse_symbols(raw: str) -> list[str]:
-    return list(dict.fromkeys(part.strip().upper() for part in raw.replace("\n", ",").split(",") if part.strip()))
+    return list(
+        dict.fromkeys(
+            part.strip().upper() for part in raw.replace("\n", ",").split(",") if part.strip()
+        )
+    )
 
 
 def as_frame(records) -> pd.DataFrame:
@@ -61,7 +65,9 @@ with st.sidebar:
     lookback = st.slider("ROC lookback seconds", 60, 900, settings.analytics.roc_window_seconds, 30)
     leaderboard_size = st.slider("Leaderboard size", 5, 50, 10)
     simulator_steps = st.slider("Simulator steps per refresh", 1, 30, 5)
-    st.caption("Yahoo supplies delayed 1-minute bars. IBKR uses a read-only paper snapshot connection.")
+    st.caption(
+        "Yahoo supplies delayed 1-minute bars. IBKR uses a read-only paper snapshot connection."
+    )
 
 key = controller_key(source, symbols, lookback)
 if st.session_state.get("dashboard_key") != key:
@@ -78,7 +84,9 @@ def refresh() -> None:
     if source == "Simulator":
         controller.simulator_refresh(simulator_steps)
     elif source == "Yahoo Finance":
-        ticks = fetch_latest_ticks(symbols, settings.market_data.yahoo.period, settings.market_data.yahoo.interval)
+        ticks = fetch_latest_ticks(
+            symbols, settings.market_data.yahoo.period, settings.market_data.yahoo.interval
+        )
         controller.ingest(ticks)
     else:
         ib = settings.market_data.ibkr
@@ -107,18 +115,38 @@ stats = controller.statistics()
 
 metric_cols = st.columns(6)
 metric_cols[0].metric("Symbols ranked", stats.count)
-metric_cols[1].metric("Mean ROC", "n/a" if stats.mean_roc is None else f"{stats.mean_roc * 100:+.3f}%")
-metric_cols[2].metric("Median ROC", "n/a" if stats.median_roc is None else f"{stats.median_roc * 100:+.3f}%")
-metric_cols[3].metric("Std dev", "n/a" if stats.standard_deviation is None else f"{stats.standard_deviation * 100:.3f}%")
+metric_cols[1].metric(
+    "Mean ROC", "n/a" if stats.mean_roc is None else f"{stats.mean_roc * 100:+.3f}%"
+)
+metric_cols[2].metric(
+    "Median ROC", "n/a" if stats.median_roc is None else f"{stats.median_roc * 100:+.3f}%"
+)
+metric_cols[3].metric(
+    "Std dev",
+    "n/a" if stats.standard_deviation is None else f"{stats.standard_deviation * 100:.3f}%",
+)
 metric_cols[4].metric("Skew", "n/a" if stats.skew is None else f"{stats.skew:+.2f}")
-metric_cols[5].metric("Positive", "n/a" if stats.positive_percentage is None else f"{stats.positive_percentage:.0%}")
+metric_cols[5].metric(
+    "Positive", "n/a" if stats.positive_percentage is None else f"{stats.positive_percentage:.0%}"
+)
 
-page = st.segmented_control("View", ["Leaderboard", "Market", "Architecture"], default="Leaderboard")
+page = st.segmented_control(
+    "View", ["Leaderboard", "Market", "Architecture"], default="Leaderboard"
+)
 
 if page == "Leaderboard":
     st.subheader("Live cross-sectional momentum")
     left, right = st.columns(2)
-    display_cols = ["rank", "symbol", "sector", "price", "roc_pct", "rvol", "vwap_distance_pct", "orb"]
+    display_cols = [
+        "rank",
+        "symbol",
+        "sector",
+        "price",
+        "roc_pct",
+        "rvol",
+        "vwap_distance_pct",
+        "orb",
+    ]
     with left:
         st.markdown("#### Leaders")
         leaders = df.head(leaderboard_size)[display_cols] if not df.empty else df
@@ -137,10 +165,14 @@ if page == "Leaderboard":
             },
         )
         if leader_event.selection.rows:
-            st.session_state.selected_symbol = leaders.iloc[leader_event.selection.rows[0]]["symbol"]
+            st.session_state.selected_symbol = leaders.iloc[leader_event.selection.rows[0]][
+                "symbol"
+            ]
     with right:
         st.markdown("#### Laggards")
-        laggards = df.tail(leaderboard_size).sort_values("roc_pct")[display_cols] if not df.empty else df
+        laggards = (
+            df.tail(leaderboard_size).sort_values("roc_pct")[display_cols] if not df.empty else df
+        )
         laggard_event = st.dataframe(
             laggards,
             use_container_width=True,
@@ -156,7 +188,9 @@ if page == "Leaderboard":
             },
         )
         if laggard_event.selection.rows:
-            st.session_state.selected_symbol = laggards.iloc[laggard_event.selection.rows[0]]["symbol"]
+            st.session_state.selected_symbol = laggards.iloc[laggard_event.selection.rows[0]][
+                "symbol"
+            ]
 
     chart_left, chart_right = st.columns(2)
     valid = df.dropna(subset=["roc_pct"]) if not df.empty else df
@@ -165,17 +199,24 @@ if page == "Leaderboard":
         if valid.empty:
             st.info("ROC needs enough event-time history for the selected lookback.")
         else:
-            fig = px.histogram(valid, x="roc_pct", nbins=min(20, max(5, len(valid))), hover_data=["symbol"])
+            fig = px.histogram(
+                valid, x="roc_pct", nbins=min(20, max(5, len(valid))), hover_data=["symbol"]
+            )
             fig.add_vline(x=0, line_dash="dash")
             fig.update_layout(xaxis_title="ROC %", yaxis_title="Symbols", height=340)
             st.plotly_chart(fig, use_container_width=True)
     with chart_right:
         st.markdown("#### Momentum breadth")
         positive = stats.positive_percentage * 100 if stats.positive_percentage is not None else 0
-        gauge = go.Figure(go.Indicator(
-            mode="gauge+number", value=positive, number={"suffix": "%"},
-            title={"text": "Symbols with positive ROC"}, gauge={"axis": {"range": [0, 100]}},
-        ))
+        gauge = go.Figure(
+            go.Indicator(
+                mode="gauge+number",
+                value=positive,
+                number={"suffix": "%"},
+                title={"text": "Symbols with positive ROC"},
+                gauge={"axis": {"range": [0, 100]}},
+            )
+        )
         gauge.update_layout(height=340, margin=dict(l=30, r=30, t=70, b=20))
         st.plotly_chart(gauge, use_container_width=True)
 
@@ -186,24 +227,35 @@ if page == "Leaderboard":
         selected_row = df[df.symbol == selected].iloc[0]
         cards = st.columns(6)
         cards[0].metric("Last", f"${selected_row.price:,.2f}")
-        cards[1].metric("ROC", "n/a" if pd.isna(selected_row.roc_pct) else f"{selected_row.roc_pct:+.3f}%")
+        cards[1].metric(
+            "ROC", "n/a" if pd.isna(selected_row.roc_pct) else f"{selected_row.roc_pct:+.3f}%"
+        )
         cards[2].metric("Rank", int(selected_row["rank"]))
         cards[3].metric("RVOL", "n/a" if pd.isna(selected_row.rvol) else f"{selected_row.rvol:.2f}")
-        cards[4].metric("VWAP distance", "n/a" if pd.isna(selected_row.vwap_distance_pct) else f"{selected_row.vwap_distance_pct:+.3f}%")
+        cards[4].metric(
+            "VWAP distance",
+            "n/a"
+            if pd.isna(selected_row.vwap_distance_pct)
+            else f"{selected_row.vwap_distance_pct:+.3f}%",
+        )
         cards[5].metric("ORB", selected_row.orb)
 
         history = controller.symbol_history(selected)
-        history_df = pd.DataFrame({
-            "datetime": [r.timestamp for r in history],
-            "price": [r.price for r in history],
-            "roc_pct": [None if r.roc is None else r.roc * 100 for r in history],
-            "vwap": [r.vwap for r in history],
-            "volume": [r.volume for r in history],
-        })
+        history_df = pd.DataFrame(
+            {
+                "datetime": [r.timestamp for r in history],
+                "price": [r.price for r in history],
+                "roc_pct": [None if r.roc is None else r.roc * 100 for r in history],
+                "vwap": [r.vwap for r in history],
+                "volume": [r.volume for r in history],
+            }
+        )
         price_col, roc_col = st.columns(2)
         with price_col:
             price_chart = go.Figure()
-            price_chart.add_trace(go.Scatter(x=history_df.datetime, y=history_df.price, name="Price"))
+            price_chart.add_trace(
+                go.Scatter(x=history_df.datetime, y=history_df.price, name="Price")
+            )
             price_chart.add_trace(go.Scatter(x=history_df.datetime, y=history_df.vwap, name="VWAP"))
             price_chart.update_layout(title="Price and VWAP", height=350, yaxis_title="Price")
             st.plotly_chart(price_chart, use_container_width=True)
@@ -236,8 +288,12 @@ elif page == "Market":
             treemap = valid.copy()
             treemap["tile_size"] = treemap["volume"].fillna(0).clip(lower=1)
             fig = px.treemap(
-                treemap, path=["sector", "symbol"], values="tile_size", color="roc_pct",
-                color_continuous_scale="RdYlGn", color_continuous_midpoint=0,
+                treemap,
+                path=["sector", "symbol"],
+                values="tile_size",
+                color="roc_pct",
+                color_continuous_scale="RdYlGn",
+                color_continuous_midpoint=0,
                 hover_data={"price": ":.2f", "roc_pct": ":+.3f", "rvol": ":.2f"},
             )
             fig.update_layout(height=520, margin=dict(l=5, r=5, t=10, b=5))
@@ -250,8 +306,11 @@ elif page == "Market":
         else:
             sector_df["average_roc_pct"] = sector_df.average_roc * 100
             fig = px.bar(
-                sector_df.sort_values("average_roc_pct"), x="average_roc_pct", y="sector",
-                orientation="h", hover_data=["symbols"],
+                sector_df.sort_values("average_roc_pct"),
+                x="average_roc_pct",
+                y="sector",
+                orientation="h",
+                hover_data=["symbols"],
             )
             fig.add_vline(x=0, line_dash="dash")
             fig.update_layout(height=520, xaxis_title="Average ROC %", yaxis_title="")
