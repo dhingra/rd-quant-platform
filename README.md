@@ -1,149 +1,118 @@
 # RD Quant Platform
 
-**Version:** `0.1.0-alpha`  
-**Sprint:** Foundation / architecture refactor
+**Version:** `0.2.0-alpha`  
+**Sprint:** 2 — Streaming Dashboard
 
-RD Quant Platform is a modular, event-driven quantitative research and execution framework. It is inspired by the streaming pattern used in DolphinDB—stateful per-symbol calculations followed by cross-sectional market analysis—and extends that pattern toward scanners, strategies, portfolio management, and guarded broker execution.
+RD Quant Platform is a modular, event-driven quantitative market analytics and trading framework inspired by the DolphinDB pattern of per-symbol stateful computation followed by cross-sectional analysis.
 
-This release is the architectural foundation. It intentionally prioritizes clean boundaries, replaceable adapters, and tests before migrating the full dashboard.
+## Sprint 2 deliverables
 
-## What is implemented in Sprint 1
+Sprint 2 builds on the SOLID foundation from Sprint 1 and adds a runnable market dashboard without moving business logic into Streamlit.
 
-- `src/` package layout with bounded contexts
-- immutable domain models for ticks, bars, quotes, signals, orders, trades, positions, and portfolios
-- market-data and execution ports (interfaces)
-- asynchronous in-process event bus with handler isolation
-- dependency-injection composition root
-- typed YAML configuration with environment overrides
-- centralized logging configuration
-- plugin registry
-- separate provider packages:
-  - `datasources.simulator` — functional streaming provider
-  - `datasources.yahoo` — functional polling adapter when the Yahoo extra is installed
-  - `datasources.ibkr` — connection lifecycle and package boundary; tick subscription migration follows in Sprint 2
-- thin Streamlit bootstrap with no trading logic
+- Live multi-source dashboard adapters:
+  - Simulator with immediate event-time history
+  - Yahoo Finance recent 1-minute bars
+  - IBKR TWS / Gateway read-only paper snapshots
+- Incremental `ReactiveFactorEngine`
+  - event-time ROC
+  - RVOL
+  - VWAP and VWAP distance
+  - gap analysis
+  - opening-range state
+- Cross-sectional ranking
+- Market statistics:
+  - mean ROC
+  - median ROC
+  - standard deviation
+  - skew
+  - percentage positive
+- Market breadth
+- ROC histogram
+- momentum breadth gauge
+- sector ranking
+- Finviz-style treemap
+- clickable leader and laggard rows
+- selected-symbol price, VWAP, ROC, and volume charts
+- controller layer that keeps analytics out of the UI
 - unit and integration tests
-- CI, linting, formatting, typing, and pre-commit configuration
-- architecture documentation and ADRs
-
-## Planned cumulative platform
-
-### v1.0 — Streaming Dashboard
-
-Stable data layer, reactive factor engine, cross-sectional analytics, ROC distribution, treemap, sector ranking, market breadth, clickable symbols, and live charts.
-
-### v2.0 — Scanner Engine
-
-Configurable filters, saved scans, alerts, momentum, gap, RVOL, opening-range, VWAP, and unusual-volume scanners.
-
-### v3.0 — Strategy Lab
-
-Visual strategy rules, backtesting, performance analytics, position sizing, and paper portfolio.
-
-### v4.0 — Execution Platform
-
-Everything in v1.0–v3.0 plus IBKR paper execution, portfolio management, risk controls, order management, and trade journal.
 
 ## Architecture
 
 ```text
-Market data adapters (Yahoo / IBKR / Simulator)
-                         │
-                         ▼
-               Normalized Tick / Bar
-                         │
-                         ▼
-                    Event Bus
-                         │
-         ┌───────────────┼────────────────┐
-         ▼               ▼                ▼
-  Factor engine   Cross-sectional     Persistence
-                         │
-                         ▼
-                 Scanner / Strategy
-                         │
-                         ▼
-                  Risk / Execution
-                         │
-                         ▼
-                 Portfolio / Journal
+Yahoo / IBKR / Simulator
+          │
+          ▼
+   normalized Tick
+          │
+          ▼
+ ReactiveFactorEngine
+ ROC · RVOL · VWAP · Gap · ORB
+          │
+          ▼
+ Cross-sectional analytics
+ ranking · breadth · sectors · statistics
+          │
+          ▼
+ DashboardController
+          │
+          ▼
+ Streamlit terminal
 ```
 
-The framework depends on ports such as `MarketDataProvider` and `Broker`. Yahoo, IBKR, and Simulator are adapters. The Streamlit terminal is another adapter and does not own trading logic.
+The Streamlit layer renders data and handles user interaction. It does not calculate factors or rankings.
 
-## Quick start
+## Run
 
-Python 3.11 or newer is required.
+Python 3.11 or newer:
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate       # Windows: .venv\\Scripts\\activate
-pip install -e .[dev,ui]
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -e .[dev,all]
 pytest
-rdqp --ticks 20
 streamlit run apps/terminal/streamlit_app.py
 ```
 
-For Yahoo support:
+For the smallest simulator-only installation:
 
 ```bash
-pip install -e .[yahoo,ui]
+pip install -e .[dev,ui]
+streamlit run apps/terminal/streamlit_app.py
 ```
 
-For IBKR support:
+## Data-source notes
 
-```bash
-pip install -e .[ibkr,ui]
-```
+### Simulator
 
-## Configuration
+Starts with enough synthetic event-time history to calculate ROC immediately. It is deterministic within a dashboard session and is intended for development and demonstrations.
 
-Edit `config/app.yaml`. Environment variables can override any nested setting:
+### Yahoo Finance
 
-```bash
-export RDQP__MARKET_DATA__PROVIDER=yahoo
-export RDQP__APP__LOG_LEVEL=DEBUG
-```
+Yahoo supplies delayed, polled one-minute bars. It is suitable for learning, research, and dashboard prototyping, but not for execution-grade decisions.
 
-Double underscores delimit nested keys.
+### IBKR
 
-## IBKR safety
+The Sprint 2 terminal requests read-only market-data snapshots from TWS or IB Gateway. Defaults are configured for the TWS paper port (`7497`) and delayed data type (`3`). Market-data subscriptions and IBKR line limits still apply.
 
-Execution is disabled by default. The current IBKR adapter connects read-only and uses the paper-trading port in configuration. Live execution will remain behind explicit configuration, account checks, confirmation, and risk controls.
+## Row selection
 
-## Tests and quality checks
+Leader and laggard tables use Streamlit's single-row selection event. The selected table row updates one shared `selected_symbol`, which drives every detail card and chart. This fixes the earlier mismatch between a clicked row and the displayed ticker.
+
+## Quality checks
 
 ```bash
 pytest --cov=rdqp
 ruff check src tests apps
 black --check src tests apps
 mypy src/rdqp
-pre-commit run --all-files
 ```
 
-## Repository map
+## Roadmap
 
-```text
-apps/terminal/          Thin Streamlit application
-config/                 Runtime configuration
-docs/                   Architecture, roadmap, ADRs
-src/rdqp/platform/      Config, logging, event bus, DI, plugins
-src/rdqp/market/        Market domain, ports, application services
-src/rdqp/datasources/   Yahoo, IBKR, Simulator adapters
-src/rdqp/analytics/     Factor and cross-sectional domains
-src/rdqp/scanners/      Scanner context
-src/rdqp/strategies/    Strategy context
-src/rdqp/portfolio/     Portfolio context
-src/rdqp/execution/     Broker and execution context
-tests/                  Unit and integration tests
-```
+- Sprint 1: architecture foundation — complete
+- Sprint 2: streaming market dashboard — complete
+- Sprint 3: configurable scanner engine, saved scans, and alerts
+- Sprint 4: strategy lab, backtesting, performance analytics, paper portfolio
+- Sprint 5: IBKR paper execution, portfolio, risk, orders, and journal
 
-## Current limitations
-
-- Sprint 1 is a foundation release, not the completed v4.0 terminal.
-- The previous dashboard has not yet been migrated into this repository.
-- Yahoo is polled and is not execution-grade market data.
-- The IBKR adapter's connection lifecycle is present; normalized tick streaming is scheduled for Sprint 2.
-- The event bus is in-process. A durable broker can be introduced behind the same abstraction later.
-
-See [`docs/roadmap.md`](docs/roadmap.md) for the implementation sequence.
+Execution remains disabled by default.
