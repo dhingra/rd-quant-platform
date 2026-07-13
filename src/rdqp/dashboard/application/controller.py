@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import random
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from rdqp.analytics.application.factor_engine import ReactiveFactorEngine
 from rdqp.analytics.application.market_analytics import market_statistics, sector_strength
 from rdqp.analytics.domain.models import FactorSnapshot
 from rdqp.dashboard.application.sectors import sector_for
 from rdqp.market.domain.models import Tick
+from rdqp.scanners.application.alerts import AlertEngine
+from rdqp.scanners.application.engine import ScannerEngine
+from rdqp.scanners.domain.models import ScanDefinition, ScanResult, ScannerAlert
 
 
 class DashboardController:
@@ -18,8 +21,10 @@ class DashboardController:
         self.engine = ReactiveFactorEngine(roc_window_seconds)
         self._random = random.Random(seed)
         self._prices = {s: self._random.uniform(30, 500) for s in self.symbols}
-        self._clock = datetime.now(UTC) - timedelta(seconds=roc_window_seconds + 30)
+        self._clock = datetime.now(timezone.utc) - timedelta(seconds=roc_window_seconds + 30)
         self._seen: set[tuple[str, datetime]] = set()
+        self.scanner = ScannerEngine()
+        self.alerts = AlertEngine()
 
     def simulator_refresh(self, steps: int = 15) -> None:
         for _ in range(max(1, steps)):
@@ -28,9 +33,7 @@ class DashboardController:
                 price = max(0.01, self._prices[symbol] * (1 + self._random.gauss(0, 0.0015)))
                 self._prices[symbol] = price
                 self.engine.update(
-                    Tick(
-                        symbol, self._clock, price, self._random.randint(100, 20_000), "simulator"
-                    ),
+                    Tick(symbol, self._clock, price, self._random.randint(100, 20_000), "simulator"),
                     sector=sector_for(symbol),
                 )
 
@@ -53,3 +56,9 @@ class DashboardController:
 
     def symbol_history(self, symbol: str) -> tuple[FactorSnapshot, ...]:
         return self.engine.history(symbol)
+
+    def run_scan(self, definition: ScanDefinition) -> ScanResult:
+        return self.scanner.run(definition, self.records())
+
+    def evaluate_alerts(self, result: ScanResult) -> tuple[ScannerAlert, ...]:
+        return self.alerts.evaluate(result)

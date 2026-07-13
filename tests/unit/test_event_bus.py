@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 import pytest
 
@@ -20,7 +20,7 @@ async def test_event_bus_dispatches_sync_and_async_handlers() -> None:
 
     bus.subscribe(TickReceived, sync_handler)
     bus.subscribe(TickReceived, async_handler)
-    event = TickReceived(tick=Tick("NVDA", datetime.now(UTC), 100))
+    event = TickReceived(tick=Tick("NVDA", datetime.now(timezone.utc), 100))
 
     failures = await bus.publish(event)
 
@@ -41,7 +41,7 @@ async def test_event_bus_isolates_handler_failure() -> None:
 
     bus.subscribe(TickReceived, broken)
     bus.subscribe(TickReceived, healthy)
-    event = TickReceived(tick=Tick("AMD", datetime.now(UTC), 100))
+    event = TickReceived(tick=Tick("AMD", datetime.now(timezone.utc), 100))
 
     failures = await bus.publish(event)
 
