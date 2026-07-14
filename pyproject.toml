@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rd-quant-platform"
-version = "0.9.0a1"
+version = "0.10.0a1"
 description = "Event-driven quantitative research and execution platform"
 readme = "README.md"
 requires-python = ">=3.11"

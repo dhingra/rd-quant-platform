@@ -21,8 +21,7 @@ class MonteCarloEngine:
         finals: list[float] = []
         drawdowns: list[float] = []
         for _ in range(simulations):
-            sample = returns.copy()
-            rng.shuffle(sample)
+            sample = rng.choices(returns, k=len(returns))
             equity = initial
             peak = initial
             max_drawdown = 0.0

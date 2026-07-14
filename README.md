@@ -170,7 +170,7 @@ This project is for research, education, and paper-trading validation. Yahoo Fin
 - Runtime metrics and operational status page
 - Replay remains isolated from broker execution
 
-## Sprint 9 — Research & Optimization Lab
+## Sprint 10 — Research & Optimization Lab
 
 - deterministic grid-search optimization
 - rolling walk-forward validation
@@ -179,3 +179,8 @@ This project is for research, education, and paper-trading validation. Yahoo Fin
 - persistent SQLite experiment journal
 
 See [`docs/research_lab.md`](docs/research_lab.md).
+
+
+## Sprint 10 — Quant Intelligence
+
+See `docs/SPRINT_10.md` for scorecards, robustness analysis, factor ranking, and research visualizations.

@@ -1,4 +1,4 @@
-"""RD Quant Terminal — Sprint 9 cumulative research and automation platform."""
+"""RD Quant Terminal — Sprint 10 cumulative quant intelligence platform."""
 # ruff: noqa: E402, E501
 
 from __future__ import annotations
@@ -49,9 +49,12 @@ from rdqp.observability import HealthMonitor, HealthStatus, MetricsRegistry
 from rdqp.platform.config.settings import load_settings
 from rdqp.portfolio import PaperPortfolio
 from rdqp.replay import CsvTickStore, ReplayEngine
+from rdqp.research.application.comparison import compare_strategies
 from rdqp.research.application.metrics import extended_metrics
 from rdqp.research.application.monte_carlo import MonteCarloEngine
 from rdqp.research.application.optimizer import GridSearchOptimizer
+from rdqp.research.application.robustness import analyze_robustness
+from rdqp.research.application.scorecard import ScorecardEngine
 from rdqp.research.application.walk_forward import WalkForwardEngine
 from rdqp.research.domain.models import (
     OptimizationObjective,
@@ -142,7 +145,7 @@ def refresh() -> None:
 header_left, header_right = st.columns([5, 1])
 with header_left:
     st.title("RD Quant Platform")
-    st.caption("Sprint 9 · Research Lab · optimization · walk-forward validation · Monte Carlo")
+    st.caption("Sprint 10 · Quant Intelligence · scorecards · robustness · factor ranking")
 with header_right:
     if st.button("Refresh data", type="primary", use_container_width=True):
         try:
@@ -920,8 +923,8 @@ elif page == "Research Lab":
         )
         research_definition = saved_research_strategies[strategy_name]
         histories = controller.all_histories()
-        optimizer_tab, walk_tab, monte_tab, experiments_tab = st.tabs(
-            ["Optimizer", "Walk forward", "Monte Carlo", "Experiments"]
+        optimizer_tab, walk_tab, monte_tab, scorecard_tab, experiments_tab = st.tabs(
+            ["Optimizer", "Walk forward", "Monte Carlo", "Scorecard & Compare", "Experiments"]
         )
 
         with optimizer_tab:
@@ -970,7 +973,35 @@ elif page == "Research Lab":
                             "trades": trial.result.metrics.trade_count,
                         }
                     )
-                st.dataframe(pd.DataFrame(trial_rows), use_container_width=True, hide_index=True)
+                trials_df = pd.DataFrame(trial_rows)
+                st.dataframe(trials_df, use_container_width=True, hide_index=True)
+                robustness = analyze_robustness(optimized)
+                r1, r2, r3, r4 = st.columns(4)
+                r1.metric("Positive trials", f"{robustness.positive_ratio:.0%}")
+                r2.metric("Stability score", robustness.stability_score)
+                r3.metric(
+                    "Mean score",
+                    "n/a" if robustness.mean_score is None else f"{robustness.mean_score:.3f}",
+                )
+                r4.metric(
+                    "Score dispersion",
+                    "n/a" if robustness.score_stddev is None else f"{robustness.score_stddev:.3f}",
+                )
+                if {"stop_loss_pct", "take_profit_pct", "score"}.issubset(trials_df.columns):
+                    heatmap_df = trials_df.pivot_table(
+                        index="take_profit_pct",
+                        columns="stop_loss_pct",
+                        values="score",
+                        aggfunc="mean",
+                    )
+                    heatmap = px.imshow(
+                        heatmap_df,
+                        text_auto=".2f",
+                        aspect="auto",
+                        title="Parameter stability heatmap",
+                        labels={"x": "Stop loss %", "y": "Take profit %", "color": "Score"},
+                    )
+                    st.plotly_chart(heatmap, use_container_width=True)
                 best = optimized.best_trial
                 if best is not None:
                     b1, b2, b3, b4 = st.columns(4)
@@ -1046,7 +1077,18 @@ elif page == "Research Lab":
                     }
                     for fold in wf.folds
                 ]
-                st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+                wf_df = pd.DataFrame(rows)
+                st.dataframe(wf_df, use_container_width=True, hide_index=True)
+                if not wf_df.empty:
+                    fold_chart = px.bar(
+                        wf_df,
+                        x="fold",
+                        y="oos_return_pct",
+                        title="Out-of-sample return by fold",
+                        labels={"oos_return_pct": "OOS return %"},
+                    )
+                    fold_chart.add_hline(y=0, line_dash="dash")
+                    st.plotly_chart(fold_chart, use_container_width=True)
 
         with monte_tab:
             st.markdown("#### Trade-sequence Monte Carlo")
@@ -1096,6 +1138,56 @@ elif page == "Research Lab":
                         use_container_width=True,
                         hide_index=True,
                     )
+
+        with scorecard_tab:
+            st.markdown("#### Deployment readiness scorecard")
+            base_result = st.session_state.get("backtest_result")
+            if base_result is None:
+                st.info("Run a backtest in Strategy Lab to generate a deployment scorecard.")
+            else:
+                scorecard = ScorecardEngine().evaluate(base_result)
+                s1, s2, s3, s4 = st.columns(4)
+                s1.metric("Readiness", scorecard.status.value)
+                s2.metric("Score", f"{scorecard.score}/100")
+                s3.metric("Return", f"{scorecard.total_return:+.2%}")
+                s4.metric("Max drawdown", f"{scorecard.max_drawdown:.2%}")
+                checks_df = pd.DataFrame(
+                    [
+                        {"check": name.replace("_", " ").title(), "passed": passed}
+                        for name, passed in scorecard.checks.items()
+                    ]
+                )
+                st.dataframe(checks_df, use_container_width=True, hide_index=True)
+                if scorecard.reasons:
+                    st.warning("Review required: " + ", ".join(scorecard.reasons))
+                else:
+                    st.success("All paper-deployment gates passed.")
+
+                comparison_results = [base_result]
+                optimized = st.session_state.get("optimization_result")
+                if optimized is not None and optimized.best_trial is not None:
+                    comparison_results.append(optimized.best_trial.result)
+                comparison = compare_strategies(comparison_results)
+                st.markdown("#### Strategy comparison")
+                st.dataframe(
+                    pd.DataFrame(
+                        [
+                            {
+                                "strategy": row.strategy_name,
+                                "total_return_pct": row.total_return * 100,
+                                "max_drawdown_pct": row.max_drawdown * 100,
+                                "sharpe": row.sharpe_ratio,
+                                "sortino": row.sortino_ratio,
+                                "profit_factor": row.profit_factor,
+                                "win_rate_pct": row.win_rate * 100,
+                                "trades": row.trade_count,
+                            }
+                            for row in comparison
+                        ]
+                    ),
+                    use_container_width=True,
+                    hide_index=True,
+                )
 
         with experiments_tab:
             st.markdown("#### Persistent experiment journal")
