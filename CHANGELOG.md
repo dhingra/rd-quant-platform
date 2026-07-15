@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.12.0a1 — Sprint 12
+
+- Added constrained portfolio optimization.
+- Added portfolio risk contribution, VaR, Expected Shortfall, beta, and drawdown analytics.
+- Added deterministic stress testing and rebalance planning.
+- Added portfolio-intelligence tests and documentation.
+
+
 ## 0.11.0a1 — Sprint 11
 
 - Added research-workstation performance series.

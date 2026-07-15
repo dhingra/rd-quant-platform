@@ -188,3 +188,8 @@ See `docs/SPRINT_10.md` for scorecards, robustness analysis, factor ranking, and
 ## Sprint 11 — Research Workstation
 
 Sprint 11 introduces the `rdqp.workstation` package for chart-ready performance series, trade-explorer analytics, portfolio allocation and sector exposure, and deterministic replay playback controls. See `docs/SPRINT_11.md`.
+
+
+## Sprint 12 — Portfolio Intelligence
+
+Sprint 12 adds constrained portfolio optimization, portfolio risk decomposition, historical tail-risk metrics, scenario stress tests, and cost-aware rebalance planning. See `docs/SPRINT_12.md`.
