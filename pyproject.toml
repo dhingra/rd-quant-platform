@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rd-quant-platform"
-version = "0.10.0a1"
+version = "0.11.0a1"
 description = "Event-driven quantitative research and execution platform"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -55,7 +55,10 @@ src = ["src", "tests", "apps"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM"]
-ignore = ["B008"]
+ignore = ["B008", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"apps/terminal/streamlit_app.py" = ["E402"]
 
 [tool.black]
 line-length = 100

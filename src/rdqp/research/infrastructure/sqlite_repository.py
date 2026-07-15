@@ -39,12 +39,7 @@ class SqliteExperimentRepository:
             ]
         with self._connect() as connection:
             cursor = connection.execute(
-                """
-                INSERT INTO research_experiments (
-                    name, created_at, strategy_json, objective,
-                    parameters_json, metrics_json, notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
+                "INSERT INTO research_experiments(name,created_at,strategy_json,objective,parameters_json,metrics_json,notes) VALUES(?,?,?,?,?,?,?)",
                 (
                     experiment.name,
                     experiment.created_at.astimezone(UTC).isoformat(),
@@ -62,12 +57,7 @@ class SqliteExperimentRepository:
     def list(self, limit: int = 100) -> tuple[ResearchExperiment, ...]:
         with self._connect() as connection:
             rows = connection.execute(
-                """
-                SELECT id, name, created_at, strategy_json, objective,
-                       parameters_json, metrics_json, notes
-                FROM research_experiments
-                ORDER BY id DESC LIMIT ?
-                """,
+                "SELECT id,name,created_at,strategy_json,objective,parameters_json,metrics_json,notes FROM research_experiments ORDER BY id DESC LIMIT ?",
                 (limit,),
             ).fetchall()
         return tuple(self._decode(row) for row in rows)

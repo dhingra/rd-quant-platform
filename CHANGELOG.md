@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.11.0a1 — Sprint 11
+
+- Added research-workstation performance series.
+- Added trade explorer analytics and filters.
+- Added portfolio allocation and sector exposure analytics.
+- Added deterministic replay playback controller.
+- Added workstation tests and documentation.
+
+
 ## 0.9.0-alpha — Sprint 9
 
 - Added Research & Optimization Lab.

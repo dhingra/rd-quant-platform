@@ -184,3 +184,7 @@ See [`docs/research_lab.md`](docs/research_lab.md).
 ## Sprint 10 — Quant Intelligence
 
 See `docs/SPRINT_10.md` for scorecards, robustness analysis, factor ranking, and research visualizations.
+
+## Sprint 11 — Research Workstation
+
+Sprint 11 introduces the `rdqp.workstation` package for chart-ready performance series, trade-explorer analytics, portfolio allocation and sector exposure, and deterministic replay playback controls. See `docs/SPRINT_11.md`.
