@@ -36,6 +36,7 @@ class WalkForwardEngine:
         objective: OptimizationObjective = OptimizationObjective.SHARPE,
     ) -> WalkForwardResult:
         timestamps = sorted({item.timestamp for history in histories.values() for item in history})
+
         if len(timestamps) < 4 or folds < 1:
             return WalkForwardResult((), 0.0, 0.0)
 
@@ -53,6 +54,7 @@ class WalkForwardEngine:
                 train_end_index + test_size,
                 len(timestamps) - 1,
             )
+
             if train_end_index >= test_end_index:
                 break
 
@@ -70,6 +72,7 @@ class WalkForwardEngine:
                 ranges,
                 objective,
             )
+
             if optimized.best_trial is None:
                 continue
 
@@ -100,6 +103,7 @@ class WalkForwardEngine:
             combined *= 1.0 + value
 
         average = sum(returns) / len(returns) if returns else 0.0
+
         return WalkForwardResult(
             tuple(fold_results),
             combined - 1.0 if returns else 0.0,

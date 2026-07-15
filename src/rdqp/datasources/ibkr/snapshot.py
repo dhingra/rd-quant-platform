@@ -28,13 +28,7 @@ def fetch_snapshot_ticks(
             price = ticker.marketPrice()
             if price and price == price and price > 0:
                 result.append(
-                    Tick(
-                        symbol,
-                        datetime.now(UTC),
-                        float(price),
-                        float(ticker.volume or 0),
-                        "ibkr",
-                    )
+                    Tick(symbol, datetime.now(UTC), float(price), float(ticker.volume or 0), "ibkr")
                 )
         return result
     finally:
