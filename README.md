@@ -193,3 +193,10 @@ Sprint 11 introduces the `rdqp.workstation` package for chart-ready performance 
 ## Sprint 12 — Portfolio Intelligence
 
 Sprint 12 adds constrained portfolio optimization, portfolio risk decomposition, historical tail-risk metrics, scenario stress tests, and cost-aware rebalance planning. See `docs/SPRINT_12.md`.
+
+### Sprint 13.2 — Information Coefficient
+
+Factor Lab now measures predictive power with Pearson IC, tie-aware Rank IC,
+quintile/decile forward-return spreads, and multi-horizon factor-decay profiles.
+The report builder produces immutable, chart-ready research outputs without
+introducing dataframe or numerical-library dependencies into the core domain.
