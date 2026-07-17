@@ -1,3 +1,10 @@
+## 0.14.0a1
+
+- Added IBKR paper-account synchronization.
+- Added account, position, order, execution, and connection-health snapshots.
+- Added stale-data and disconnect detection.
+- Added paper-port and readonly safety boundaries.
+
 ## 0.13.0a5
 
 - Added regime-aware strategy scoring and eligibility gates.
