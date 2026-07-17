@@ -34,7 +34,9 @@ def test_zscores_are_centered_and_constant_safe() -> None:
 
 
 def test_percentile_ranks_are_tie_aware() -> None:
-    assert percentile_ranks([10.0, 20.0, 20.0, 30.0]) == pytest.approx((0.0, 0.5, 0.5, 1.0))
+    assert percentile_ranks([10.0, 20.0, 20.0, 30.0]) == pytest.approx(
+        (0.0, 0.5, 0.5, 1.0)
+    )
 
 
 def test_normalizer_ignores_missing_and_respects_direction() -> None:

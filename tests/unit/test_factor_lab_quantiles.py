@@ -18,7 +18,8 @@ def test_quantile_analysis_calculates_long_short_spread() -> None:
         timestamp,
         NormalizationMethod.RAW,
         tuple(
-            FactorScore(f"S{i}", "momentum", float(i), float(i), float(i), i / 9) for i in range(10)
+            FactorScore(f"S{i}", "momentum", float(i), float(i), float(i), i / 9)
+            for i in range(10)
         ),
     )
     returns = {f"S{i}": i / 100 for i in range(10)}

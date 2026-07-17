@@ -36,7 +36,8 @@ class FactorResearchReportBuilder:
         if not selected_horizons:
             raise ValueError("at least one forward-return horizon is required")
         ic_series = tuple(
-            self._ic.analyze_series(sections, returns, horizon) for horizon in selected_horizons
+            self._ic.analyze_series(sections, returns, horizon)
+            for horizon in selected_horizons
         )
         primary_horizon = selected_horizons[0] if selected_horizons else 1
         return_map = {

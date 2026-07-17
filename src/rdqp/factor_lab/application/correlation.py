@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from math import sqrt
 from statistics import fmean
+from typing import Iterable
 
 from rdqp.factor_lab.domain.models import (
     CorrelationCell,

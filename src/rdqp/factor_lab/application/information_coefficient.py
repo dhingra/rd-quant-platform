@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
-from datetime import datetime
 from math import sqrt
 from statistics import fmean
+from datetime import datetime
 
 from rdqp.factor_lab.application.correlation import pearson_correlation
 from rdqp.factor_lab.domain.information import (
