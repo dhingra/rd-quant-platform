@@ -1,3 +1,11 @@
+from rdqp.execution.account_sync import (
+    AccountSyncResult,
+    AccountSyncService,
+    BrokerAccountState,
+    BrokerSyncHealth,
+    ConnectionState,
+    IBKRAccountReader,
+)
 from rdqp.execution.application.order_manager import OrderManager
 from rdqp.execution.domain.models import (
     AccountSnapshot,
@@ -16,6 +24,12 @@ from rdqp.execution.infrastructure.paper_broker import PaperExecutionBroker
 from rdqp.execution.infrastructure.sqlite_journal import SQLiteTradeJournal
 
 __all__ = [
+    "IBKRAccountReader",
+    "ConnectionState",
+    "BrokerSyncHealth",
+    "BrokerAccountState",
+    "AccountSyncService",
+    "AccountSyncResult",
     "AccountSnapshot",
     "BrokerPosition",
     "ExecutionFill",
