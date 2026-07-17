@@ -1,3 +1,10 @@
+## 0.13.0a5
+
+- Added regime-aware strategy scoring and eligibility gates.
+- Added normalized strategy ensemble allocations.
+- Added Factor & Regime Lab Streamlit integration.
+- Added factor leaderboard, regime classifier, and strategy recommendation views.
+
 # Changelog
 
 ## 0.13.0a3 — Sprint 13.3
