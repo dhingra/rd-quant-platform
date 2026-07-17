@@ -109,3 +109,12 @@ All Sprint 1–3 architecture, dashboard, market analytics, data providers, scan
 - Added pairwise-complete Pearson factor correlation analysis.
 - Added an adapter from live `FactorSnapshot` records to Factor Lab observations.
 - Added unit coverage for normalization, missing values, correlations, and snapshot mapping.
+
+## 0.13.0a2 — Sprint 13.2 Information Coefficient
+
+- Added Pearson Information Coefficient and tie-aware Rank IC analysis.
+- Added IC time-series aggregates, information ratios, and positive hit rates.
+- Added quintile and decile forward-return analysis with long-short spreads.
+- Added factor-decay profiles across configurable forward horizons.
+- Added a composable factor research report builder.
+- Added deterministic unit tests for IC, Rank IC, quantiles, decay, and reporting.
