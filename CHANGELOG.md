@@ -100,3 +100,12 @@ All Sprint 1–3 architecture, dashboard, market analytics, data providers, scan
 - Added strategy comparison and robustness analysis.
 - Added optimization heatmaps and walk-forward charts.
 - Corrected Monte Carlo sampling to bootstrap with replacement.
+
+## 0.13.0a1 — Sprint 13.1 Factor Lab Core
+
+- Added immutable factor definitions, observations, scores, and correlation records.
+- Added cross-sectional winsorization, z-score normalization, and tie-aware percentile ranks.
+- Added direction-aware factor scoring for factors where lower values are preferable.
+- Added pairwise-complete Pearson factor correlation analysis.
+- Added an adapter from live `FactorSnapshot` records to Factor Lab observations.
+- Added unit coverage for normalization, missing values, correlations, and snapshot mapping.
