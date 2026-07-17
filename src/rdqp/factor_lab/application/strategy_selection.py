@@ -33,7 +33,9 @@ class StrategySelectionEngine:
                 reverse=True,
             )
         )
-        eligible = [item for item in recommendations if item.eligible][: self.config.maximum_strategies]
+        eligible = [item for item in recommendations if item.eligible][
+            : self.config.maximum_strategies
+        ]
         positive_scores = [max(item.score, 0.0) for item in eligible]
         total = sum(positive_scores)
         if eligible and total <= 0:
@@ -55,7 +57,9 @@ class StrategySelectionEngine:
     ) -> StrategyRecommendation:
         reasons: list[str] = []
         if item.trade_count < self.config.minimum_trades:
-            reasons.append(f"Only {item.trade_count} trades; minimum is {self.config.minimum_trades}")
+            reasons.append(
+                f"Only {item.trade_count} trades; minimum is {self.config.minimum_trades}"
+            )
         if item.max_drawdown < self.config.maximum_drawdown:
             reasons.append("Drawdown exceeds configured limit")
         if self.config.disable_negative_regime_return and item.total_return <= 0:

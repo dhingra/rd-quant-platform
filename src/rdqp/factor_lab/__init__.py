@@ -39,12 +39,12 @@ from .domain import (
     RegimePoint,
     RegimeThresholds,
     RegimeTransition,
+    RiskRegime,
     StrategyAllocation,
     StrategyRecommendation,
     StrategyRegimePerformance,
     StrategySelectionConfig,
     StrategySelectionResult,
-    RiskRegime,
     TrendRegime,
     VolatilityRegime,
 )

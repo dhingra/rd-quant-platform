@@ -23,7 +23,6 @@ from rdqp.factor_lab import (
 )
 from rdqp.strategies.infrastructure import YamlStrategyRepository
 
-
 ROOT = Path(__file__).resolve().parents[3]
 
 st.set_page_config(page_title="Factor & Regime Lab", page_icon="🧭", layout="wide")
@@ -139,9 +138,7 @@ with selection_tab:
     st.subheader("Regime-aware strategy selection")
     regime = st.session_state.get("factor_lab_regime")
     if regime is None:
-        regime = RegimeEngine().classify(
-            RegimeObservation(datetime.now(UTC), 0.0, 0.20, 0.50)
-        )
+        regime = RegimeEngine().classify(RegimeObservation(datetime.now(UTC), 0.0, 0.20, 0.50))
 
     repository = YamlStrategyRepository(ROOT / "data/saved_strategies.yaml")
     strategies = repository.list()
@@ -225,4 +222,6 @@ with selection_tab:
             px.pie(allocations, names="strategy", values="weight", title="Suggested ensemble"),
             use_container_width=True,
         )
-        st.info("Paper deployment remains operator-controlled; no orders are submitted from this page.")
+        st.info(
+            "Paper deployment remains operator-controlled; no orders are submitted from this page."
+        )

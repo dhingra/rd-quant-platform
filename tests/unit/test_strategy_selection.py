@@ -49,9 +49,7 @@ def test_strategy_selection_ranks_and_allocates() -> None:
 def test_strategy_selection_filters_hostile_and_irrelevant_regimes() -> None:
     engine = StrategySelectionEngine(StrategySelectionConfig(minimum_trades=10))
     hostile = perf("Fragile", -0.02, 0.4, trades=3)
-    other = StrategyRegimePerformance(
-        "Defensive", RiskRegime.RISK_OFF, 0.1, 1.0, -0.05, 1.5, 20
-    )
+    other = StrategyRegimePerformance("Defensive", RiskRegime.RISK_OFF, 0.1, 1.0, -0.05, 1.5, 20)
     result = engine.select(point(), [hostile, other])
     assert len(result.recommendations) == 1
     assert not result.recommendations[0].eligible
