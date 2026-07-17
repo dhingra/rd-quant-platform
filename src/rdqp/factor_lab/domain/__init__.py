@@ -45,6 +45,7 @@ __all__ = [
     "RiskRegime",
     "TrendRegime",
     "VolatilityRegime",
+    "StrategyAllocation",
 ]
 
 from .regime import (
@@ -57,4 +58,12 @@ from .regime import (
     RiskRegime,
     TrendRegime,
     VolatilityRegime,
+)
+
+from .selection import (
+    StrategyAllocation,
+    StrategyRecommendation,
+    StrategyRegimePerformance,
+    StrategySelectionConfig,
+    StrategySelectionResult,
 )

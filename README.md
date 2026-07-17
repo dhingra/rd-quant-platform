@@ -200,3 +200,8 @@ Factor Lab now measures predictive power with Pearson IC, tie-aware Rank IC,
 quintile/decile forward-return spreads, and multi-horizon factor-decay profiles.
 The report builder produces immutable, chart-ready research outputs without
 introducing dataframe or numerical-library dependencies into the core domain.
+
+
+## Factor & Regime Lab
+
+Sprint 13 adds cross-sectional factor research, market-regime classification, and regime-aware strategy selection through `apps/terminal/pages/Factor_Regime_Lab.py`.

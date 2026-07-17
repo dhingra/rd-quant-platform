@@ -11,6 +11,7 @@ from .normalization import FactorNormalizer, percentile_ranks, winsorize, zscore
 from .quantiles import QuantileReturnAnalyzer
 from .report import FactorResearchReportBuilder
 from .snapshot_adapter import observations_from_snapshots
+from .strategy_selection import StrategySelectionEngine
 
 __all__ = [
     "FactorCorrelationAnalyzer",
@@ -27,6 +28,7 @@ __all__ = [
     "winsorize",
     "zscores",
     "RegimeEngine",
+    "StrategySelectionEngine",
 ]
 
 from .regime import RegimeEngine
