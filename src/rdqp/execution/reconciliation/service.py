@@ -78,9 +78,12 @@ class PortfolioReconciler:
                     )
                 )
 
-        broker_id_counts = Counter(
-            order.broker_order_id for order in broker_orders if order.broker_order_id
-        )
+        broker_id_counts: Counter[str] = Counter()
+        for order in broker_orders:
+            broker_order_id = order.broker_order_id
+            if broker_order_id is not None:
+                broker_id_counts[broker_order_id] += 1
+
         for duplicate_broker_id, count in sorted(broker_id_counts.items()):
             if count > 1:
                 issues.append(
