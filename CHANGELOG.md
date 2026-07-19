@@ -1,7 +1,3 @@
-## 0.14.0a5
-
-- Sprint 14.2–14.5: reconciliation, order lifecycle, live risk controls, and operations UI.
-
 ## 0.14.0a1
 
 - Added IBKR paper-account synchronization.
