@@ -71,9 +71,7 @@ class OrderLifecycleEngine:
         if event.filled_quantity > 0:
             assert event.fill_price is not None
             previous_notional = record.filled_quantity * (record.average_fill_price or 0.0)
-            average = (
-                previous_notional + event.filled_quantity * event.fill_price
-            ) / quantity
+            average = (previous_notional + event.filled_quantity * event.fill_price) / quantity
 
         return OrderLifecycleRecord(
             order_id=record.order_id,

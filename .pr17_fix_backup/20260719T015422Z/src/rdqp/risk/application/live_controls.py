@@ -55,8 +55,7 @@ class LiveRiskController:
             if peak_net_liquidation <= 0
             else max(
                 0.0,
-                (peak_net_liquidation - account.net_liquidation)
-                / peak_net_liquidation,
+                (peak_net_liquidation - account.net_liquidation) / peak_net_liquidation,
             )
         )
         if drawdown >= limits.max_drawdown_pct:
@@ -87,8 +86,7 @@ class LiveRiskController:
             fingerprint = self._request_fingerprint(request)
             if any(
                 self._request_fingerprint(order.request) == fingerprint
-                and order.status.value
-                not in {"FILLED", "CANCELLED", "REJECTED", "ERROR"}
+                and order.status.value not in {"FILLED", "CANCELLED", "REJECTED", "ERROR"}
                 for order in open_orders
             ):
                 reasons.append("Duplicate open order")

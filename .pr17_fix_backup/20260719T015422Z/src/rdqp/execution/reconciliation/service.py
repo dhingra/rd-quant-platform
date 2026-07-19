@@ -12,9 +12,7 @@ from rdqp.execution.reconciliation.models import (
 
 
 class PortfolioReconciler:
-    def __init__(
-        self, *, quantity_tolerance: float = 1e-9, cost_tolerance: float = 0.01
-    ) -> None:
+    def __init__(self, *, quantity_tolerance: float = 1e-9, cost_tolerance: float = 0.01) -> None:
         self.quantity_tolerance = quantity_tolerance
         self.cost_tolerance = cost_tolerance
 
@@ -81,15 +79,15 @@ class PortfolioReconciler:
         broker_id_counts = Counter(
             order.broker_order_id for order in broker_orders if order.broker_order_id
         )
-        for duplicate_broker_id, count in sorted(broker_id_counts.items()):
+        for broker_id, count in sorted(broker_id_counts.items()):
             if count > 1:
                 issues.append(
                     ReconciliationIssue(
                         ReconciliationIssueType.DUPLICATE_BROKER_ORDER_ID,
                         ReconciliationSeverity.ERROR,
                         "",
-                        f"Broker order id {duplicate_broker_id} appears {count} times",
-                        duplicate_broker_id,
+                        f"Broker order id {broker_id} appears {count} times",
+                        broker_id,
                         None,
                     )
                 )

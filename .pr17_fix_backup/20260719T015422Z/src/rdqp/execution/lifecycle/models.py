@@ -42,10 +42,7 @@ class OrderLifecycleRecord:
             raise ValueError("requested_quantity must be positive")
         if self.filled_quantity < 0:
             raise ValueError("filled_quantity cannot be negative")
-        if (
-            self.requested_quantity is not None
-            and self.filled_quantity > self.requested_quantity
-        ):
+        if self.requested_quantity is not None and self.filled_quantity > self.requested_quantity:
             raise ValueError("filled_quantity exceeds requested_quantity")
 
     @property

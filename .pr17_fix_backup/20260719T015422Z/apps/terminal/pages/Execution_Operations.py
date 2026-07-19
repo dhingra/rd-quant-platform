@@ -1,4 +1,5 @@
 """Sprint 14 execution operations dashboard."""
+
 from __future__ import annotations
 
 import os
@@ -16,9 +17,7 @@ from rdqp.risk.application.live_controls import LiveRiskController, LiveRiskLimi
 
 st.set_page_config(page_title="Execution Operations", layout="wide")
 st.title("Execution Operations")
-st.warning(
-    "PAPER ACCOUNT ONLY — live-account ports and unattended live execution remain disabled."
-)
+st.warning("PAPER ACCOUNT ONLY — live-account ports and unattended live execution remain disabled.")
 
 st.session_state.setdefault("execution_emergency_paused", True)
 st.session_state.setdefault("account_sync_result", None)
@@ -78,7 +77,10 @@ with account_tab:
             cols[2].metric("Buying power", f"{snapshot.buying_power:,.2f}")
             cols[3].metric("Unrealized P&L", f"{snapshot.unrealized_pnl:,.2f}")
             st.markdown("#### Positions")
-            st.dataframe(state_rows(state, "account") if False else [asdict(p) for p in snapshot.positions], use_container_width=True)
+            st.dataframe(
+                state_rows(state, "account") if False else [asdict(p) for p in snapshot.positions],
+                use_container_width=True,
+            )
             st.markdown("#### Open orders")
             st.dataframe(state_rows(state, "open_orders"), use_container_width=True)
             st.markdown("#### Executions")
@@ -111,9 +113,7 @@ with reconciliation_tab:
 
 with lifecycle_tab:
     st.subheader("Order lifecycle audit")
-    st.caption(
-        "NEW → SUBMITTED → ACKNOWLEDGED → PARTIALLY_FILLED → FILLED / CANCELLED / REJECTED"
-    )
+    st.caption("NEW → SUBMITTED → ACKNOWLEDGED → PARTIALLY_FILLED → FILLED / CANCELLED / REJECTED")
     records = tuple(st.session_state.lifecycle_records)
     rows = [
         {

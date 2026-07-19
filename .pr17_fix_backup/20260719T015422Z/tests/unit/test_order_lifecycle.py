@@ -11,14 +11,10 @@ from rdqp.execution import (
 def test_lifecycle_is_idempotent_and_aggregates_fills() -> None:
     engine = OrderLifecycleEngine()
     record = OrderLifecycleRecord("o1", requested_quantity=5)
-    record = engine.apply(
-        record, OrderLifecycleEvent("e1", "o1", OrderLifecycleState.SUBMITTED)
-    )
+    record = engine.apply(record, OrderLifecycleEvent("e1", "o1", OrderLifecycleState.SUBMITTED))
     record = engine.apply(
         record,
-        OrderLifecycleEvent(
-            "e2", "o1", OrderLifecycleState.PARTIALLY_FILLED, 2, 100.0
-        ),
+        OrderLifecycleEvent("e2", "o1", OrderLifecycleState.PARTIALLY_FILLED, 2, 100.0),
     )
     record = engine.apply(
         record,
@@ -52,9 +48,7 @@ def test_lifecycle_rejects_overfill_and_invalid_partial_completion() -> None:
     with pytest.raises(ValueError, match="cannot complete"):
         engine.apply(
             submitted,
-            OrderLifecycleEvent(
-                "e3", "o1", OrderLifecycleState.PARTIALLY_FILLED, 5, 10.0
-            ),
+            OrderLifecycleEvent("e3", "o1", OrderLifecycleState.PARTIALLY_FILLED, 5, 10.0),
         )
 
 
@@ -67,14 +61,10 @@ def test_lifecycle_requires_valid_fill_data() -> None:
     with pytest.raises(ValueError, match="cannot be negative"):
         engine.apply(
             submitted,
-            OrderLifecycleEvent(
-                "e2", "o1", OrderLifecycleState.PARTIALLY_FILLED, -1, 10.0
-            ),
+            OrderLifecycleEvent("e2", "o1", OrderLifecycleState.PARTIALLY_FILLED, -1, 10.0),
         )
     with pytest.raises(ValueError, match="fill_price"):
         engine.apply(
             submitted,
-            OrderLifecycleEvent(
-                "e3", "o1", OrderLifecycleState.PARTIALLY_FILLED, 1
-            ),
+            OrderLifecycleEvent("e3", "o1", OrderLifecycleState.PARTIALLY_FILLED, 1),
         )
