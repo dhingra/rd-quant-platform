@@ -1,11 +1,11 @@
 # RD Quant Platform
 
-**Version:** `0.7.0-alpha`  
-**Release:** Sprint 8 — Scheduled Automation and Alert Operations
+**Version:** `0.14.0-alpha`  
+**Release:** Sprint 14 — Paper Account Operations
 
 RD Quant Platform is a modular, event-driven quantitative research and paper-trading platform inspired by the DolphinDB pattern of stateful per-symbol computation followed by cross-sectional analytics.
 
-Sprint 8 is cumulative: it contains the architecture foundation, streaming dashboard, scanner engine, Strategy Lab, and execution platform developed in Sprints 1–5.
+Sprint 14 is cumulative and covers research, portfolio intelligence, paper execution, account synchronization, reconciliation, lifecycle management, automation, and operations monitoring.
 
 ## Capabilities
 
@@ -68,6 +68,15 @@ Sprint 8 is cumulative: it contains the architecture foundation, streaming dashb
 - terminal notification center and JSONL alert journal
 - persistent SQLite scheduler/operator state
 - dedicated Scheduler & Alerts terminal page
+
+
+### Sprint 14 — Paper account operations
+
+- read-only IBKR paper account synchronization and connection-health monitoring
+- broker/local portfolio and open-order reconciliation
+- idempotent order lifecycle state machine with immutable audit history
+- daily-loss, drawdown, exposure, concentration, stale-data, disconnect, and duplicate-order controls
+- Execution Operations Streamlit dashboard with emergency pause and paper-mode banner
 
 ## Architecture
 

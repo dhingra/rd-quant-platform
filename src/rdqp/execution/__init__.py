@@ -22,6 +22,19 @@ from rdqp.execution.domain.models import (
 from rdqp.execution.infrastructure.ibkr_broker import IBKRPaperBroker
 from rdqp.execution.infrastructure.paper_broker import PaperExecutionBroker
 from rdqp.execution.infrastructure.sqlite_journal import SQLiteTradeJournal
+from rdqp.execution.lifecycle import (
+    OrderLifecycleEngine,
+    OrderLifecycleEvent,
+    OrderLifecycleRecord,
+    OrderLifecycleState,
+)
+from rdqp.execution.reconciliation import (
+    PortfolioReconciler,
+    ReconciliationIssue,
+    ReconciliationIssueType,
+    ReconciliationReport,
+    ReconciliationSeverity,
+)
 
 __all__ = [
     "IBKRAccountReader",
@@ -44,4 +57,13 @@ __all__ = [
     "OrderRequest",
     "PaperExecutionBroker",
     "SQLiteTradeJournal",
+    "OrderLifecycleEngine",
+    "OrderLifecycleEvent",
+    "OrderLifecycleRecord",
+    "OrderLifecycleState",
+    "PortfolioReconciler",
+    "ReconciliationIssue",
+    "ReconciliationIssueType",
+    "ReconciliationReport",
+    "ReconciliationSeverity",
 ]
